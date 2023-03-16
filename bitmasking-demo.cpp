@@ -1,10 +1,15 @@
 #include <stdio.h>
 
-/* demo of bit masking and shifting */
-int main(int argc, char **argv) {
+#include "map_tree.h"
+#include "page_table.h"
+#include "translation_lookaside_buffer.h"
 
-  int	page;
-  
+/* demo of bit masking and shifting */
+int main(int argc, char **argv)
+{
+
+  int page;
+
   /* Suppose that we have a three level page table:
    * Level 0:  4 bits
    * Level 1:  8 bits
@@ -14,23 +19,23 @@ int main(int argc, char **argv) {
    * page size is 2^12 = 4096 bytes
    */
 
-  int	address = 0xFe98f982;
+  int address = 0xFe98f982;
 
   /* Suppose we are interested in the level 1 page table index:
    * We would have to construct a bit mask where the following bits
    * are set:
    *
-   * 3 3 2 2 2 2 2 2 2 2 2 2 1 1 1 1 1 1 1 1 1 1 
+   * 3 3 2 2 2 2 2 2 2 2 2 2 1 1 1 1 1 1 1 1 1 1
    * 1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0
    * ===============================================================
-   * 0 0 0 0|1 1 1 1|1 1 1 1|0 0 0 0|0 0 0 0|0 0 0 0|0 0 0 0|0 0 0 0 
+   * 0 0 0 0|1 1 1 1|1 1 1 1|0 0 0 0|0 0 0 0|0 0 0 0|0 0 0 0|0 0 0 0
    * or in hexadecimal:
    *    0   |   F   |   F   |   0   |   0   |   0   |   0   |   0
    *
    * You will have to construct this in an algorithmic fashion, for
    * demonstration purposes we'll just use a constant.
    */
-  unsigned int	mask = 0x0FF00000;
+  unsigned int mask = 0x0FF00000;
 
   /* Note that since we stored Address as an int instead of an
    * unsigned int, when we print in decimal we think that this is an
@@ -51,8 +56,8 @@ int main(int argc, char **argv) {
   printf("Page number = 0x%x\n", page);
 
   /* example to build a mask 0xF0*/
-  unsigned int   aMask = 1;
-  unsigned int   numOfMaskBits = 4;
+  unsigned int aMask = 1;
+  unsigned int numOfMaskBits = 4;
   /* after the following loop, aMask will become 0xF */
   for (int b = 1; b < numOfMaskBits; b++)
   {
