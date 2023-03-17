@@ -1,37 +1,36 @@
 # CXX Make variable for compiler
-CXX = g++
+CC=g++
 # -std=c++11  C/C++ variant to use, e.g. C++ 2011
 # -Wall       show the necessary warning files
 # -g3         include information for symbolic debugger e.g. gdb 
-CXXFLAGS = -std=c++11 -Wall -g3 -c
+CCFLAGS=-std=c++11 -Wall -g -g3 -c
 
 # object files
-OBJS = map_tree.o page_table.o translation_lookaside_buffer.o bitmasking-demo.o
+OBJS = main.o vaddr_tracereader.o
 
 # Program name
-PROGRAM = mmuwithtlb
+PROGRAM = a3
 
-# Rules format:
-# target : dependency1 dependency2 ... dependencyN
-#     Command to make target, uses default rules if not specified
+all: $(PROGRAM)
 
-# First target is the one executed if you just type make
-# make target specifies a specific target
-# $^ is an example of a special variable.  It substitutes all dependencies
+# The program depends upon its object files
 $(PROGRAM) : $(OBJS)
-	$(CXX) -o $(PROGRAM) $^
+	$(CC) -o $(PROGRAM) $(OBJS)
 
-map_tree.o: map_tree.h map_tree.cpp
-	$(CXX) $(CXXFLAGS) map_tree.cpp
+main.o : main.cpp
+	$(CC) -g $(CCFLAGS) main.cpp
+	
+vaddr_tracereader.o : vaddr_tracereader.c vaddr_tracereader.h
+	$(CC) $(CCFLAGS) vaddr_tracereader.c
+	
+debug: $(PROGRAM)
+	gdb $(PROGRAM)
 
-page_table.o: map_tree.o page_table.h page_table.cpp 
-	$(CXX) $(CXXFLAGS) page_table.cpp
-
-translation_lookaside_buffer.o: translation_lookaside_buffer.h translation_lookaside_buffer.cpp
-	$(CXX) $(CXXFLAGS) translation_lookaside_buffer.cpp
-
-bitmasking-demo.o : map_tree.o page_table.o translation_lookaside_buffer.o bitmasking-demo.cpp
-	$(CXX) $(CXXFLAGS) bitmasking-demo.cpp
-    
+# Once things work, people frequently delete their object files.
+# If you use "make clean", this will do it for you.
+# As we use gnuemacs which leaves auto save files termintating
+# with ~, we will delete those as well.
 clean :
-	rm -f *.o *.exe mmuwithtlb
+	rm -f *.o *~ $(PROGRAM)
+	
+	

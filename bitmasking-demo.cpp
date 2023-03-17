@@ -68,4 +68,6 @@ int main(int argc, char **argv)
   // Shift into appropriate position, for this example, shift to left by 4 bits
   int leftShift = 4;
   aMask = aMask << leftShift; // aMask will become 0xF0
+  
+  printf("aMask:", aMask);
 }
