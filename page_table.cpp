@@ -4,10 +4,70 @@
 
 PageTable::PageTable()
 {
+    PageTable(DEFAULT_LEVEL_COUNT, DEFAULT_BITS_PER_LEVEL);
+}
+
+PageTable::PageTable(unsigned int levelCount, unsigned int bitsPerLevel)
+{
+    this->root = new Level(this, 0);
+    this->levelCount = levelCount;
+    this->bitmask = new unsigned int[levelCount];
+    this->bitShift = new unsigned int[levelCount];
+    this->entryCount = new unsigned int[levelCount];
+
+    /*build a mask*/
+    unsigned int aMask = 1;
+    unsigned int aEntryCount = 1 << bitsPerLevel;
+    /* after the following loop, aMask will become 0xF */
+    for (size_t b = 1; b < bitsPerLevel; b++)
+    {
+        aMask = aMask << 1;
+        aMask = aMask | 1;
+    }
+    /* bit shift mask into position for level 0 */
+    aMask <<= (levelCount + 1) * bitsPerLevel;
+
+    /* initialize level-related properties */
+    for (size_t i = 0; i < levelCount; i++)
+    {
+
+        this->bitmask[i] = aMask;
+        this->bitShift[i] = (levelCount - i) * bitsPerLevel;
+        this->entryCount[i] = aEntryCount;
+
+        // Shift into appropriate position for next level mask
+        aMask >>= bitsPerLevel;
+    }
 }
 
 PageTable::~PageTable()
 {
+    remove(root);
+    this->root = nullptr;
+}
+
+void PageTable::remove(PageTable::Level *node)
+{
+    for (size_t i = 0; i < entryCount[node->depth]; i++)
+    {
+        if (node->nextLevel[i])
+        {
+            remove(node->nextLevel[i]);
+            node->nextLevel[i] = nullptr;
+        }
+        if (node->map[i])
+        {
+            delete node->map[i];
+            node->map[i] = nullptr;
+        }
+    }
+    delete node->nextLevel;
+    delete node->map;
+
+    node->nextLevel = nullptr;
+    node->map = nullptr;
+
+    delete node;
 }
 
 /**
@@ -51,7 +111,7 @@ unsigned int virtualAddressToVPN(unsigned int virtualAddress, unsigned int mask,
     * @param virtualAddress
     * @return Map*
     */
-Map *lookup_vpn2pfn(PageTable *pageTable, unsigned int virtualAddress)
+PageTable::Map *lookup_vpn2pfn(PageTable *pageTable, unsigned int virtualAddress)
 {
     return nullptr;
 };
@@ -73,16 +133,27 @@ void insert_vpn2pfn(PageTable *pagetable, unsigned int virtualAddress, unsigned 
 {
 }
 
-Level::Level()
+PageTable::Level::Level(PageTable *pageTable, unsigned int depth)
 {
+    this->pageTable = pageTable;
+    this->depth = depth;
+    this->entryCount = pageTable->entryCount[depth];
+    this->nextLevel = new PageTable::Level *[entryCount];
+    this->map = new PageTable::Map *[entryCount];
+
+    for (size_t i = 0; i < entryCount; i++)
+    {
+        nextLevel[i] = nullptr;
+        map[i] = nullptr;
+    }
 }
-Level::~Level()
+PageTable::Level::~Level()
 {
 }
 
-Map::Map()
+PageTable::Map::Map()
 {
 }
-Map::~Map()
+PageTable::Map::~Map()
 {
 }
