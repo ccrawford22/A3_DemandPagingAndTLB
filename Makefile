@@ -6,7 +6,7 @@ CXX = g++
 CXXFLAGS = -std=c++11 -Wall -g3 -c
 
 # object files
-OBJS = map_tree.o page_table.o translation_lookaside_buffer.o bitmasking-demo.o
+OBJS = page_table.o translation_lookaside_buffer.o bitmasking-demo.o
 
 # Program name
 PROGRAM = mmuwithtlb
@@ -21,16 +21,13 @@ PROGRAM = mmuwithtlb
 $(PROGRAM) : $(OBJS)
 	$(CXX) -o $(PROGRAM) $^
 
-map_tree.o: map_tree.h map_tree.cpp
-	$(CXX) $(CXXFLAGS) map_tree.cpp
-
-page_table.o: map_tree.o page_table.h page_table.cpp 
+page_table.o: page_table.h page_table.cpp 
 	$(CXX) $(CXXFLAGS) page_table.cpp
 
 translation_lookaside_buffer.o: translation_lookaside_buffer.h translation_lookaside_buffer.cpp
 	$(CXX) $(CXXFLAGS) translation_lookaside_buffer.cpp
 
-bitmasking-demo.o : map_tree.o page_table.o translation_lookaside_buffer.o bitmasking-demo.cpp
+bitmasking-demo.o : page_table.o translation_lookaside_buffer.o bitmasking-demo.cpp
 	$(CXX) $(CXXFLAGS) bitmasking-demo.cpp
     
 clean :

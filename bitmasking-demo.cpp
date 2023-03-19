@@ -1,6 +1,5 @@
 #include <stdio.h>
 
-#include "map_tree.h"
 #include "page_table.h"
 #include "translation_lookaside_buffer.h"
 
@@ -59,7 +58,7 @@ int main(int argc, char **argv)
   unsigned int aMask = 1;
   unsigned int numOfMaskBits = 4;
   /* after the following loop, aMask will become 0xF */
-  for (int b = 1; b < numOfMaskBits; b++)
+  for (size_t b = 1; b < numOfMaskBits; b++)
   {
     aMask = aMask << 1;
     aMask = aMask | 1;

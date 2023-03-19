@@ -69,4 +69,20 @@ Map *lookup_vpn2pfn(PageTable *pageTable, unsigned int virtualAddress)
     * @param virtualAddress
     * @param frame
     */
-void insert_vpn2pfn(PageTable *pagetable, unsigned int virtualAddress, unsigned int frame);
+void insert_vpn2pfn(PageTable *pagetable, unsigned int virtualAddress, unsigned int frame)
+{
+}
+
+Level::Level()
+{
+}
+Level::~Level()
+{
+}
+
+Map::Map()
+{
+}
+Map::~Map()
+{
+}
