@@ -2,14 +2,8 @@
 
 #include "page_table.h"
 
-PageTable::PageTable()
-{
-    PageTable(DEFAULT_LEVEL_COUNT, DEFAULT_BITS_PER_LEVEL);
-}
-
 PageTable::PageTable(unsigned int levelCount, unsigned int bitsPerLevel)
 {
-    this->root = new Level(this, 0);
     this->levelCount = levelCount;
     this->bitmask = new unsigned int[levelCount];
     this->bitShift = new unsigned int[levelCount];
@@ -38,36 +32,21 @@ PageTable::PageTable(unsigned int levelCount, unsigned int bitsPerLevel)
         // Shift into appropriate position for next level mask
         aMask >>= bitsPerLevel;
     }
+
+    // initialize root last as levels will try to access entryCount in the page table
+    this->root = new Level(this, 0);
 }
 
 PageTable::~PageTable()
 {
-    remove(root);
-    this->root = nullptr;
-}
-
-void PageTable::remove(PageTable::Level *node)
-{
-    for (size_t i = 0; i < entryCount[node->depth]; i++)
-    {
-        if (node->nextLevel[i])
-        {
-            remove(node->nextLevel[i]);
-            node->nextLevel[i] = nullptr;
-        }
-        if (node->map[i])
-        {
-            delete node->map[i];
-            node->map[i] = nullptr;
-        }
-    }
-    delete node->nextLevel;
-    delete node->map;
-
-    node->nextLevel = nullptr;
-    node->map = nullptr;
-
-    delete node;
+    delete (root);
+    root = nullptr;
+    delete bitmask;
+    bitmask = nullptr;
+    delete bitShift;
+    bitShift = nullptr;
+    delete entryCount;
+    entryCount = nullptr;
 }
 
 /**
@@ -93,7 +72,7 @@ void PageTable::remove(PageTable::Level *node)
     * @param shift
     * @return unsigned int
     */
-unsigned int virtualAddressToVPN(unsigned int virtualAddress, unsigned int mask, unsigned int shift)
+unsigned int PageTable::virtualAddressToVPN(unsigned int virtualAddress, unsigned int mask, unsigned int shift)
 {
     return UINT_MAX;
 };
@@ -111,7 +90,7 @@ unsigned int virtualAddressToVPN(unsigned int virtualAddress, unsigned int mask,
     * @param virtualAddress
     * @return Map*
     */
-PageTable::Map *lookup_vpn2pfn(PageTable *pageTable, unsigned int virtualAddress)
+PageTable::Map *PageTable::lookup_vpn2pfn(unsigned int virtualAddress)
 {
     return nullptr;
 };
@@ -129,8 +108,13 @@ PageTable::Map *lookup_vpn2pfn(PageTable *pageTable, unsigned int virtualAddress
     * @param virtualAddress
     * @param frame
     */
-void insert_vpn2pfn(PageTable *pagetable, unsigned int virtualAddress, unsigned int frame)
+void PageTable::insert_vpn2pfn(unsigned int virtualAddress, unsigned int frame)
 {
+}
+
+unsigned int PageTable::getLevelCount()
+{
+    return levelCount;
 }
 
 PageTable::Level::Level(PageTable *pageTable, unsigned int depth)
@@ -149,6 +133,24 @@ PageTable::Level::Level(PageTable *pageTable, unsigned int depth)
 }
 PageTable::Level::~Level()
 {
+    for (size_t i = 0; i < entryCount; i++)
+    {
+        if (nextLevel[i])
+        {
+            delete nextLevel[i];
+            nextLevel[i] = nullptr;
+        }
+        if (map[i])
+        {
+            delete map[i];
+            map[i] = nullptr;
+        }
+    }
+    delete nextLevel;
+    nextLevel = nullptr;
+
+    delete map;
+    map = nullptr;
 }
 
 PageTable::Map::Map()

@@ -1,9 +1,6 @@
 #ifndef PAGE_TABLE_H
 #define PAGE_TABLE_H
 
-#define DEFAULT_LEVEL_COUNT 3
-#define DEFAULT_BITS_PER_LEVEL 8
-
 using namespace std;
 
 class PageTable
@@ -46,13 +43,14 @@ public:
    private:
    };
 
-   PageTable();
    PageTable(unsigned int levelCount, unsigned int bitsPerLevel);
    ~PageTable();
 
    unsigned int virtualAddressToVPN(unsigned int virtualAddress, unsigned int mask, unsigned int shift);
-   Map *lookup_vpn2pfn(PageTable *pageTable, unsigned int virtualAddress);
-   void insert_vpn2pfn(PageTable *pagetable, unsigned int virtualAddress, unsigned int frame);
+   Map *lookup_vpn2pfn(unsigned int virtualAddress);
+   void insert_vpn2pfn(unsigned int virtualAddress, unsigned int frame);
+
+   unsigned int getLevelCount();
 
 private:
    /**
@@ -75,13 +73,6 @@ private:
     * @brief entryCount[i]: number of possible pages for level i
     */
    unsigned int *entryCount;
-
-   /**
-    * @brief Recursively removes the node and all of its children
-    *
-    * @param root Root nodeof subtree to be removed
-    */
-   void remove(Level *root);
 };
 
 #endif
