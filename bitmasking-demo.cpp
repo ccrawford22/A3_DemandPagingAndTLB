@@ -1,11 +1,203 @@
+#define BADFLAG 1
+#define NORMALEXIT 0
+
 #include <iostream>
+#include <unistd.h>
 
 #include "page_table.h"
 #include "translation_lookaside_buffer.h"
 
+// Constants and Macros
+string USAGE = " trace_file n_bits_for_level_0 ["
+               " n_bits_for_level_1... n_bits_for_level_k"
+               " -n number_of_memory_accesses_to_process "
+               " -c TLB_cache_capacity "
+               " -p print_mode (levelbitmasks, va2pa, va2pa_tlb_ptwalk, vpn2prn, offset, summary) "
+               " ]";
+/**
+ * @brief levelbitnmasks: Write out the bitmasks for each level starting with
+      the lowest tree level (root node is at level 0), one per line.
+      In this mode, you do not need to actually process any addresses.
+      Program prints bitmasks and exits. (Use report_levelbitmasks.)
+ */
+#define LEVEL_BIT_MASKS "levelbitmasks"
+/**
+ * @brief va2pa – Show virtual address translation to physical address for every
+      address, one address translation per line.
+      (Use report_virtualAddr2physicalAddr.)
+ */
+#define VA2PA "va2pa"
+/**
+ * @brief va2pa_tlb_ptwalk - Show virtual to physical translation for every address,
+      lookup TLB then pagetable walk if TLB misses, one address translation per line.
+      (Use report_va2pa_TLB_PTwalk.)
+ */
+#define VA2PA_TLB_PTWALK "va2pa_tlb_ptwalk"
+/**
+ * @brief vpn2pfn – For every virtual address, show its virtual page numbers for each
+      level followed by the frame number, one address per line.
+      (Use report_pagetable_map.)
+ */
+#define VPN2PFN "vpn2pfn"
+/**
+ * @brief offset – Show offsets of virtual addresses (excluding the virtual page number),
+      one address offset per line. (Use hexnum.)
+ */
+#define OFFSET "offset"
+/**
+ * @brief summary – Show summary statistics. This is the default argument if -p is not
+      specified. (Use report_summary.) Statistics reported include the page size, number
+      of addresses processed, hit and miss rates for tlb and pagetable walk,
+      number of frames allocated, total bytes required for page table (hint: use sizeof).
+      You should get a roughly accurate estimate of the total bytes used for the page table
+      including data used in all page tree levels. Note your calculated number may not
+      match the number of total bytes in sample_output.txt (should be close though), as you
+      may not have strictly the same data members in your structures as in the solution code,
+      which is fine. But you should be aware that in general, with more paging levels, less
+      total bytes would normally be used.
+ */
+#define SUMMARY "summary"
+
+void errorUsage(string appName)
+{
+  cerr << "Usage: " << appName << " trace_file n_bits_for_level_0 ["
+                                  " n_bits_for_level_1... n_bits_for_level_k"
+                                  " -n number_of_memory_accesses_to_process "
+                                  " -c TLB_cache_capacity "
+                                  " -p print_mode "
+                                  " ]"
+       << endl;
+}
+
 /* demo of bit masking and shifting */
 int main(int argc, char **argv)
 {
+  // CHECK USAGE
+  /* Example Call:
+      trace.tr 12 8
+          Constructs a 2 level page table with 12 bits for level 0, and 8 bits
+          for level 1. The remaining 12 bits would be for the offset in each page.
+          This invocation does not simulate TLB (as -c is not specified).
+          Process addresses from the entire file (as -n is not specified) and
+          output the summary (as -p is not specified).
+  */
+  if (argc < 3)
+  {
+    errorUsage(argv[0]);
+    exit(BADFLAG);
+  }
+
+  int option;           /* command line switch */
+  int idx;              // general purpose index variable
+  int n = 0;            // number of memory traces (set to 0 to print all mem traces by default)
+  int c = 0;            // Cache capacity of the TLB (set to 0 for NO TLB caching by default)
+  string p = "summary"; // print mode (set to "summary" by default)
+  bool verbose = false;
+  string filename;
+  /* Handle Optional Arguments */
+  while ((option = getopt(argc, argv, "vn:c:p:")) != -1)
+  {
+    /* If the option has an argument, optarg is set to point to the
+       argument associated with the option.
+     */
+    switch (option)
+    {
+    case 'n': /* Assume this takes a number */
+              /*
+                  -n N Process only the first N memory accesses / references. Processes
+                  all addresses if not present.
+        
+                  Error handling:
+                  • If an out-of-range number (< 0) is specified,
+                    print to the standard output (or standard error stderr):
+                    Number of memory accesses must be a number, greater than or equal to 0
+                    then exit.
+              */
+      if (atoi(optarg) < 0)
+      {
+        cout << endl
+             << "Number of memory accesses must be a number, greater than "
+                "or equal to 0"
+             << endl;
+        exit(BADFLAG);
+      }
+      n = atoi(optarg);
+      break;
+    case 'c': /* Assume this takes a number */
+              /*
+              -c N Cache capacity of the TLB, i.e., max number of page mapping entries (N) in TLB.
+              Default is 0 if not specified, meaning NO TLB caching.
+        
+              Error handling:
+              • If an out-of-range number (< 0) is specified,
+                print to the standard output (or standard error stderr):
+                Cache capacity must be a number, greater than or equal to 0
+                then exit.
+              */
+      if (atoi(optarg) < 0)
+      {
+        cout << endl
+             << "Cache capacity must be a number, greater than or equal to 0"
+             << endl;
+        exit(BADFLAG);
+      }
+      c = atoi(optarg);
+      break;
+    case 'p': /* Assume this takes a number */
+      /* -p N print mode.
+              Mode is a string that specifies what to be printed to the standard output:
+              levelbitmasks – Write out the bitmasks for each level starting with
+              the lowest tree level (root node is at level 0), one per line. In this mode,
+              you do not need to actually process any addresses. Program prints bitmasks and
+              exits. (Use report_levelbitmasks.)
+
+              va2pa – Show virtual address translation to physical address for every address,
+              one address translation per line. (Use report_virtualAddr2physicalAddr.)
+
+              va2pa_tlb_ptwalk - Show virtual to physical translation for every address,
+              lookup TLB then pagetable walk if TLB misses, one address translation per line.
+              (Use report_va2pa_TLB_PTwalk.)
+
+              vpn2pfn – For every virtual address, show its virtual page numbers for each
+              level followed by the frame number, one address per line. (Use report_pagetable_map.)
+
+              offset – Show offsets of virtual addresses (excluding the virtual page number),
+              one address offset per line. (Use hexnum.)
+
+              summary – Show summary statistics. This is the default argument if -p is not specified. (Use report_summary.) Statistics reported include the page size, number of addresses processed, hit and miss rates for tlb and pagetable walk, number of framesallocated, total bytes required for page table (hint: use sizeof). You should get
+              a roughly accurate estimate of the total bytes used for the page table including
+              data used in all page tree levels. Note your calculated number may not match the
+              number of total bytes in sample_output.txt (should be close though), as you may
+              not have strictly the same data members in your structures as in the solution code,
+              which is fine. But you should be aware that in general, with more paging levels,
+              less total bytes would normally be used.
+      */
+      p = optarg;
+      if (p != LEVEL_BIT_MASKS &&
+          p != VA2PA &&
+          p != VA2PA_TLB_PTWALK &&
+          p != VPN2PFN &&
+          p != OFFSET &&
+          p != SUMMARY)
+      {
+        // print usage and exit
+        errorUsage(argv[0]);
+        exit(BADFLAG); // BADFLAG is an error # defined in a header
+      }
+      p = optarg;
+      break;
+    case 'v': /* optarg is undefined */
+      cout << "-v argument is present, turning on verbose mode" << endl;
+      verbose = true;
+      break;
+
+    default:
+      // print usage and exit
+      errorUsage(argv[0]);
+      exit(BADFLAG); // BADFLAG is an error # defined in a header
+    }
+  }
+
   PageTable *pTable = new PageTable(3, 8);
 
   cout << "Created Page Table with " << pTable->getLevelCount() << " levels." << endl;
