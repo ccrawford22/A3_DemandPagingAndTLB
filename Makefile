@@ -6,7 +6,7 @@ CC=g++
 CCFLAGS=-std=c++11 -Wall -g -g3 -c
 
 # object files
-OBJS = main.o vaddr_tracereader.o page_table.o
+OBJS = main.o vaddr_tracereader.o page_table.o map_tree.o
 
 # Program name
 PROGRAM = a3
@@ -25,6 +25,9 @@ vaddr_tracereader.o : vaddr_tracereader.c vaddr_tracereader.h
 	
 page_table.o : page_table.cpp page_table.h
 	$(CC) $(CCFLAGS) page_table.cpp
+	
+map_tree.o : map_tree.cpp map_tree.h
+	$(CC) $(CCFLAGS) map_tree.cpp
 	
 debug: $(PROGRAM)
 	gdb $(PROGRAM)

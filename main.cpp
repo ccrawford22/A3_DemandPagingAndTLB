@@ -93,14 +93,14 @@ int main(int argc, char **argv){
 			std::cout << "Sum of levels is greater than address size" << std::endl;
 			exit(1);
 		}
-		int shiftAry[levelSizes.size()];
-		int levels = sizeof(shiftAry)/sizeof(shiftAry[0]);
-		for(int i = 0; i <levels; i++){
+		unsigned int shiftAry[levelSizes.size()];
+		int numLevels = sizeof(shiftAry)/sizeof(shiftAry[0]);
+		for(int i = 0; i <numLevels; i++){
 			shiftAry[i] = ADDRESS_SIZE-sum;
 			sum = sum - levelSizes[i];
 		}
 		//create new pageTable
-		PageTable *pageTable = new PageTable(shiftAry, levelSizes, levels, ADDRESS_SIZE);
+		PageTable *pageTable = new PageTable(shiftAry, levelSizes, numLevels, ADDRESS_SIZE);
 	
 		//open trace file
 		FILE *tracef_h;

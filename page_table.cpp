@@ -3,25 +3,20 @@
 #include <vector>
 #include <iostream>
 
-PageTable::PageTable(int shifts[], std::vector<int> sizes, int levels, int addressSize){
-	int levelCount = levels;
-	int shiftAry[levelCount];
+PageTable::PageTable(unsigned int shifts[], std::vector<int> sizes, int levelCount, int addressSize){
+	this->levelCount = levelCount;
+	this -> bitShift = &shifts[0];
+	this -> levelSizes = &sizes[0];
+	this -> bitMask = new unsigned int[levelCount];
 	
-	for (int i = 0; i<levelCount; i++){
-		shiftAry[i] = shifts[i];
-	}
-
-	unsigned int bitMaskAry[levelCount];
-	int entryCount[levelCount];
-	std::vector<int> levelSizes = sizes;
-	unsigned int fullVPNMask = PageTable::createMask(addressSize-shiftAry[levelCount] , shiftAry[levelCount]);
+	unsigned int fullVPNMask = PageTable::createMask(addressSize-this->bitShift[levelCount-1], this->bitShift[levelCount-1]);
 
 	for (int i = 0; i<levelCount; i++){
-		bitMaskAry[i] = PageTable::createMask(levelSizes[i], shiftAry[i]);
+		bitMask[i] = PageTable::createMask(this->levelSizes[i], this->bitShift[i]);
 }
 
 	for(int i = 0; i <levelCount; i++){
-		printf("Mask: 0x%08x\n", bitMaskAry[i]);
+		printf("Mask: 0x%08x\n", this->bitMask[i]);
 	}
 }
 
