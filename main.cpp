@@ -6,20 +6,12 @@
 #include <getopt.h>
 #include <vector>
 #include <iomanip>
+#include "page_table.h"
 
 #define DEFAULT_NUMOF_MEM_REFERENCES 1000  //FIXME: Should read all addresses from file
 #define DEFAULT_NUMOF_TLB_ENTRIES 0
 #define DEFAULT_PRINTMODE "summary"
 #define ADDRESS_SIZE 32
-
-
-
-
-unsigned int virtualAddressToVPN(unsigned int virtualAddress, unsigned int mask, unsigned int shift){
-	unsigned int page = mask & virtualAddress;
-	page = page >> shift;
-	return page;
-}
 
 
 
@@ -87,30 +79,28 @@ int main(int argc, char **argv){
 		}
 		
 		//get level sizes, calculate sum	
-		std::vector<int> levelSizes;	
-		idx++;
-		int VPNBits = 0;
+		 //get level sizes, calculate sum        
+        std::vector<int> levelSizes;
+        idx++;
+		int VPNSize = 0;
 		while (idx < argc){
 			levelSizes.push_back(atoi(argv[idx]));
-			VPNBits = VPNBits + atoi(argv[idx]);
+			VPNSize = VPNSize + atoi(argv[idx]);
 			idx++;
 		}
-		
-		//create mask
-		unsigned int mask = 1;
-		unsigned int numOfMaskBits = VPNBits;
-		int offsetBits = ADDRESS_SIZE-VPNBits;
-		
-		for (int b = 1; b < numOfMaskBits; b++)
-		{
-			mask = mask << 1;
-			mask = mask | 1;
+		int sum = VPNSize;
+		if (sum > ADDRESS_SIZE){
+			std::cout << "Sum of levels is greater than address size" << std::endl;
+			exit(1);
 		}
-		//shift left by number of offset bits
-		mask = mask << offsetBits;
-	
-		
-		std::cout << "Mask: " << std::hex << mask << std::endl;
+		int shiftAry[levelSizes.size()];
+		int levels = sizeof(shiftAry)/sizeof(shiftAry[0]);
+		for(int i = 0; i <levels; i++){
+			shiftAry[i] = ADDRESS_SIZE-sum;
+			sum = sum - levelSizes[i];
+		}
+		//create new pageTable
+		PageTable *pageTable = new PageTable(shiftAry, levelSizes, levels, ADDRESS_SIZE);
 	
 		//open trace file
 		FILE *tracef_h;
@@ -119,18 +109,15 @@ int main(int argc, char **argv){
 		if (!tracef_h) {
 			//error opening file
 			std::cout << "Unable to open <<" << traceFile << ">>" << std::endl;
-			exit(1)
+			exit(1);
 		}else{
 			//read trace file
 			p2AddrTr mtrace;
 			unsigned int vAddr;
-			unsigned int VPN;
 			for(int i = 0; i < 10; i++){
 				NextAddress(tracef_h, &mtrace);  //tracef_h - file handle from fopen 
 				vAddr = mtrace.addr;
-				printf("Addr: 0x%08x ", vAddr);
-				VPN = virtualAddressToVPN(vAddr, mask, offsetBits);
-				printf("VPN: 0x%08x\n", VPN);
+				printf("Addr: 0x%08x\n", vAddr);
 			}
 		}
 		

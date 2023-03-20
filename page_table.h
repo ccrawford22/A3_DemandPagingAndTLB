@@ -2,6 +2,7 @@
 #define PAGE_TABLE_H
 
 #include "map_tree.h"
+#include <vector>
 
 class PageTable;
 
@@ -9,8 +10,11 @@ class PageTable
 {
 
 public:
-    PageTable();
+    PageTable(int shifts[], std::vector<int> sizes, int levels, int addressSize);
     ~PageTable();
+    
+    
+    unsigned int createMask(int numOfmaskBits, int shift);
 
     /**
      * @brief Given a virtual address, apply the given bit mask and shift right by the given number

@@ -1,14 +1,48 @@
 #include <climits>
-
 #include "page_table.h"
+#include <vector>
+#include <iostream>
 
-PageTable::PageTable()
-{
+PageTable::PageTable(int shifts[], std::vector<int> sizes, int levels, int addressSize){
+	int levelCount = levels;
+	int shiftAry[levelCount];
+	
+	for (int i = 0; i<levelCount; i++){
+		shiftAry[i] = shifts[i];
+	}
+
+	unsigned int bitMaskAry[levelCount];
+	int entryCount[levelCount];
+	std::vector<int> levelSizes = sizes;
+	unsigned int fullVPNMask = PageTable::createMask(addressSize-shiftAry[levelCount] , shiftAry[levelCount]);
+
+	for (int i = 0; i<levelCount; i++){
+		bitMaskAry[i] = PageTable::createMask(levelSizes[i], shiftAry[i]);
+}
+
+	for(int i = 0; i <levelCount; i++){
+		printf("Mask: 0x%08x\n", bitMaskAry[i]);
+	}
 }
 
 PageTable::~PageTable()
 {
 }
+
+
+unsigned int PageTable::createMask(int numOfMaskBits, int shift){
+	unsigned int mask = 1;
+
+	for (int b = 1; b < numOfMaskBits; b++){
+		mask = mask <<1;
+		mask = mask | 1;
+	}
+	//shift left
+	mask = mask << shift;
+	return mask;
+}
+
+
 
 /**
  * @brief Given a virtual address, apply the given bit mask and shift right by the given number
@@ -35,7 +69,9 @@ PageTable::~PageTable()
     */
 unsigned int virtualAddressToVPN(unsigned int virtualAddress, unsigned int mask, unsigned int shift)
 {
-    return UINT_MAX;
+    unsigned int page = mask & virtualAddress;
+    page = page >> shift;
+    return page;
 };
 
 /**
