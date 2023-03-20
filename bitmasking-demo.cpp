@@ -6,6 +6,18 @@
 /* demo of bit masking and shifting */
 int main(int argc, char **argv)
 {
+  PageTable *pTable = new PageTable(3, 8);
+
+  cout << "Created Page Table with " << pTable->getLevelCount() << " levels." << endl;
+
+  delete pTable;
+  pTable = nullptr;
+
+  return 0;
+}
+
+void bitMaskDemo()
+{
 
   int page;
 
@@ -67,13 +79,4 @@ int main(int argc, char **argv)
   // Shift into appropriate position, for this example, shift to left by 4 bits
   int leftShift = 4;
   aMask = aMask << leftShift; // aMask will become 0xF0
-
-  PageTable *pTable = new PageTable(3, 8);
-
-  cout << "Created Page Table with " << pTable->getLevelCount() << " levels." << endl;
-
-  delete pTable;
-  pTable = nullptr;
-
-  return 0;
 }
