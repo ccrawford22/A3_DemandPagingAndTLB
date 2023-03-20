@@ -88,16 +88,17 @@ int main(int argc, char **argv){
 			VPNSize = VPNSize + atoi(argv[idx]);
 			idx++;
 		}
-		int sum = VPNSize;
-		if (sum > ADDRESS_SIZE){
+		if (VPNSize > ADDRESS_SIZE){
 			std::cout << "Sum of levels is greater than address size" << std::endl;
 			exit(1);
 		}
+		
+		int sum = 0;
 		unsigned int shiftAry[levelSizes.size()];
 		int numLevels = sizeof(shiftAry)/sizeof(shiftAry[0]);
 		for(int i = 0; i <numLevels; i++){
+			sum = sum + levelSizes[i];
 			shiftAry[i] = ADDRESS_SIZE-sum;
-			sum = sum - levelSizes[i];
 		}
 		//create new pageTable
 		PageTable *pageTable = new PageTable(shiftAry, levelSizes, numLevels, ADDRESS_SIZE);

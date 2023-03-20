@@ -82,7 +82,7 @@ unsigned int virtualAddressToVPN(unsigned int virtualAddress, unsigned int mask,
     * @param virtualAddress
     * @return Map*
     */
-Map *lookup_vpn2pfn(PageTable *pageTable, unsigned int virtualAddress)
+PageTable::Map *lookup_vpn2pfn(PageTable *pageTable, unsigned int virtualAddress)
 {
     return nullptr;
 };
