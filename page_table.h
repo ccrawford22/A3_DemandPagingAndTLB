@@ -3,7 +3,6 @@
 #define PAGE_TABLE_H
 
 #include <vector>
-#include "map_tree.h"
 
 #define DEFAULT_LEVEL_COUNT 3
 #define DEFAULT_BITS_PER_LEVEL 8
@@ -45,10 +44,12 @@ public:
    {
 
    public:
-      Map();
+	  PageTable *pageTable;
+	  
+	  unsigned int num;
+	  
+      Map(PageTable *pageTable, unsigned int depth);
       ~Map();
-
-   private:
    };
 
    PageTable();
@@ -61,8 +62,8 @@ public:
    Map *lookup_vpn2pfn(PageTable *pageTable, unsigned int virtualAddress);
    void insert_vpn2pfn(PageTable *pagetable, unsigned int virtualAddress, unsigned int frame);
 
-private:
-   /**
+
+	/**
     * @brief Pointer to the root of the page tree
     */
    Level *root;
@@ -93,6 +94,8 @@ private:
     * @param root Root nodeof subtree to be removed
     */
    void remove(Level *root);
+
+private:
 };
 
 #endif

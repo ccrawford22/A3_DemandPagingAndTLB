@@ -115,11 +115,15 @@ int main(int argc, char **argv){
 			//read trace file
 			p2AddrTr mtrace;
 			unsigned int vAddr;
+			unsigned int frame = 0;
 			for(int i = 0; i < 10; i++){
 				NextAddress(tracef_h, &mtrace);  //tracef_h - file handle from fopen 
 				vAddr = mtrace.addr;
+				pageTable -> insert_vpn2pfn(pageTable, vAddr, frame);
 				printf("Addr: 0x%08x\n", vAddr);
+				frame++;
 			}
+			
 		}
 		
 		fclose(tracef_h);
