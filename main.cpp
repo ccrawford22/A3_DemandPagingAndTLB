@@ -106,6 +106,8 @@ int main(int argc, char **argv){
 		//open trace file
 		FILE *tracef_h;
 		tracef_h = fopen(traceFile, "rb");
+		
+		unsigned int addy;
 
 		if (!tracef_h) {
 			//error opening file
@@ -125,6 +127,7 @@ int main(int argc, char **argv){
 			}
 			
 		}
+		
 		
 		fclose(tracef_h);
 		return (0);

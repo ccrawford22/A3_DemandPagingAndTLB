@@ -110,10 +110,25 @@ unsigned int PageTable::virtualAddressToVPN(unsigned int virtualAddress, unsigne
     * @param virtualAddress
     * @return Map*
     */
-PageTable::Map *lookup_vpn2pfn(PageTable *pageTable, unsigned int virtualAddress)
+PageTable::Map * PageTable::lookup_vpn2pfn(PageTable *pageTable, unsigned int virtualAddress)
 {
-    return nullptr;
-};
+	PageTable::Level* current = pageTable->root;
+	unsigned int levelNum;
+	for(int i = 0; i<pageTable->levelCount-1; i++){
+		levelNum = virtualAddressToVPN(virtualAddress, pageTable->bitMask[i], pageTable->bitShift[i]);
+		if(current->nextLevel[levelNum] == nullptr){
+			return nullptr;
+		}
+		current = current->nextLevel[levelNum];
+	}
+	
+	levelNum = virtualAddressToVPN(virtualAddress, pageTable->bitMask[pageTable->levelCount-1], pageTable->bitShift[pageTable->levelCount-1]);\
+	if (current->map[levelNum] != nullptr){
+		return current->map[levelNum];
+	}else{
+		return nullptr;
+	}
+}
 
 /**
  * @brief Used to add new entries to the page table when we have discovered that a page has not yet been
