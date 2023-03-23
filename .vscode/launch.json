@@ -5,6 +5,18 @@
    "version": "0.2.0",
    "configurations": [
       {
+         "name": "(lldb) Launch",
+         "type": "cppdbg",
+         "request": "launch",
+         "program": "${workspaceFolder}/mmuwithtlb",
+         "args": ["./mmuwithtlb trace.tr 12 8"],
+         "stopAtEntry": false,
+         "cwd": "${workspaceFolder}",
+         "environment": [],
+         "externalConsole": false,
+         "MIMode": "lldb"
+      },
+      {
          "miDebuggerPath": "/usr/local/bin/gdb",
          "name": "(gdb) Launch",
          "type": "cppdbg",

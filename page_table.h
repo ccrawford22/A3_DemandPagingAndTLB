@@ -1,5 +1,11 @@
+
 #ifndef PAGE_TABLE_H
 #define PAGE_TABLE_H
+
+#include <vector>
+
+#define DEFAULT_LEVEL_COUNT 3
+#define DEFAULT_BITS_PER_LEVEL 8
 
 using namespace std;
 
@@ -37,22 +43,23 @@ public:
    {
 
    public:
-      Map();
-      ~Map();
+      PageTable *pageTable;
 
-   private:
+      unsigned int num;
+
+      Map(PageTable *pageTable, unsigned int depth);
+      ~Map();
    };
 
-   PageTable(unsigned int levelCount, unsigned int bitsPerLevel);
+   PageTable();
+   PageTable(unsigned int shifts[], std::vector<int> sizes, int levels, int addressSize);
    ~PageTable();
 
+   unsigned int createMask(int numOfmaskBits, int shift);
    unsigned int virtualAddressToVPN(unsigned int virtualAddress, unsigned int mask, unsigned int shift);
-   Map *lookup_vpn2pfn(unsigned int virtualAddress);
-   void insert_vpn2pfn(unsigned int virtualAddress, unsigned int frame);
+   PageTable::Map *lookup_vpn2pfn(PageTable *pageTable, unsigned int virtualAddress);
+   void insert_vpn2pfn(PageTable *pagetable, unsigned int virtualAddress, unsigned int frame);
 
-   unsigned int getLevelCount();
-
-private:
    /**
     * @brief Pointer to the root of the page tree
     */
@@ -60,11 +67,11 @@ private:
    /**
     * @brief Number of levels
     */
-   unsigned int levelCount;
+   int levelCount;
    /**
     * @brief bitmask[i] bit mask for level i
     */
-   unsigned int *bitmask;
+   unsigned int *bitMask;
    /**
     * @brief bitShift[i]: # of bits to shift level i page bits
     */
@@ -73,6 +80,19 @@ private:
     * @brief entryCount[i]: number of possible pages for level i
     */
    unsigned int *entryCount;
+   /**
+    * @brief levelSizes[i]: size of level i in bits
+    */
+   int *levelSizes;
+
+   /**
+    * @brief Recursively removes the node and all of its children
+    *
+    * @param root Root nodeof subtree to be removed
+    */
+   void remove(Level *root);
+
+private:
 };
 
 #endif

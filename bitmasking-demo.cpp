@@ -3,9 +3,11 @@
 
 #include <iostream>
 #include <unistd.h>
+#include <fstream>
 
 #include "page_table.h"
 #include "translation_lookaside_buffer.h"
+#include "vaddr_tracereader.h"
 
 // Constants and Macros
 string USAGE = " trace_file n_bits_for_level_0 ["
@@ -97,14 +99,15 @@ int main(int argc, char **argv)
   /* Handle Optional Arguments */
   while ((option = getopt(argc, argv, "vn:c:p:")) != -1)
   {
-    /* If the option has an argument, optarg is set to point to the
+    /*
+       If the option has an argument, optarg is set to point to the
        argument associated with the option.
      */
     switch (option)
     {
     case 'n': /* Assume this takes a number */
-              /*
-                  -n N Process only the first N memory accesses / references. Processes
+              /* -n N
+                  Process only the first N memory accesses / references. Processes
                   all addresses if not present.
         
                   Error handling:
@@ -124,8 +127,8 @@ int main(int argc, char **argv)
       n = atoi(optarg);
       break;
     case 'c': /* Assume this takes a number */
-              /*
-              -c N Cache capacity of the TLB, i.e., max number of page mapping entries (N) in TLB.
+              /* -c N Cache capacity of the TLB
+              i.e., max number of page mapping entries (N) in TLB.
               Default is 0 if not specified, meaning NO TLB caching.
         
               Error handling:
@@ -143,7 +146,7 @@ int main(int argc, char **argv)
       }
       c = atoi(optarg);
       break;
-    case 'p': /* Assume this takes a number */
+    case 'p':
       /* -p N print mode.
               Mode is a string that specifies what to be printed to the standard output:
               levelbitmasks – Write out the bitmasks for each level starting with
@@ -195,6 +198,82 @@ int main(int argc, char **argv)
       // print usage and exit
       errorUsage(argv[0]);
       exit(BADFLAG); // BADFLAG is an error # defined in a header
+    }
+  }
+
+  // HANDLE MANDATORY ARGUMENTS
+  idx = optind;
+
+  // If idx < argc, there are mandatory arguments to process
+  if (idx < argc)
+  {
+
+    // Open the trace file
+    ifstream trace_file(argv[idx]);
+    if (!trace_file.is_open())
+    {
+      cerr << "Unable to open " << argv[idx] << endl;
+      return 1;
+    }
+
+    // Parse the number of bits for each level
+    int bits[3];
+    for (int i = 0; i < 3; i++)
+    {
+      bits[i] = atoi(argv[2 + i]);
+      if (bits[i] < 1)
+      {
+        cerr << "Level " << i << " page table must be at least 1 bit" << endl;
+        return 1;
+      }
+    }
+
+    // Check if the total number of bits is within the limit
+    if (bits[0] + bits[1] + bits[2] > 28)
+    {
+      cerr << "Too many bits used in page tables" << endl;
+      return 1;
+    }
+
+    // TODO: I believe the vaddr_tracereader.cpp file has some examples of how to process the trace file
+    // See example code posted below, in C
+    //     FILE *ifp;	        /* trace file */
+    // unsigned long i = 0;  /* instructions processed */
+    // p2AddrTr trace;	/* traced address */
+    // /* check usage */
+    // if(argc != 2) {
+    //   fprintf(stderr,"usage: %s input_byutr_file\n", argv[0]);
+    //   exit(1);
+    // }
+    // /* attempt to open trace file */
+    // if ((ifp = fopen(argv[1],"rb")) == NULL) {
+    //   fprintf(stderr,"cannot open %s for reading\n",argv[1]);
+    //   exit(1);
+    // }
+    // while (!feof(ifp)) {
+    //   /* get next address and process */
+    //   if (NextAddress(ifp, &trace)) {
+    //     AddressDecoder(&trace, stdout);
+    //     i++;
+    //     if ((i % 100000) == 0)
+    // fprintf(stderr,"%dK samples processed\r", i/100000);
+    //   }
+    // }
+    // /* clean up and return success */
+    // fclose(ifp);
+    // return (0);
+
+    // TODO: Process the trace file
+  }
+
+  // continue to process more mandatory arguments
+  // if there are any left
+  if (verbose && idx < argc)
+  {
+    cout << "Recieved " << argc - idx << " additional arguments that will be ignored:" << endl;
+    for (int i = idx; i < argc; i++)
+    {
+      cout << "\tArg " << i << " = " << argv[i] << endl;
     }
   }
 
