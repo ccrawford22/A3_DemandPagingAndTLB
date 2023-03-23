@@ -2,6 +2,7 @@
    "files.associations": {
       "*.ejs": "html",
       "__hash_table": "cpp",
-      "__tree": "cpp"
+      "__tree": "cpp",
+      "iostream": "cpp"
    }
 }

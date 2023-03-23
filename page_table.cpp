@@ -42,14 +42,14 @@ PageTable::PageTable(unsigned int shifts[], std::vector<int> sizes, int levelCou
 
 PageTable::~PageTable()
 {
-    // delete (root);
-    // root = nullptr;
-    // delete bitMask;
-    // bitMask = nullptr;
-    // delete bitShift;
-    // bitShift = nullptr;
-    // delete entryCount;
-    // entryCount = nullptr;
+    delete (root);
+    root = nullptr;
+    delete bitMask;
+    bitMask = nullptr;
+    delete bitShift;
+    bitShift = nullptr;
+    delete entryCount;
+    entryCount = nullptr;
 }
 
 unsigned int PageTable::createMask(int numOfMaskBits, int shift)
@@ -79,6 +79,16 @@ PageTable::Level::Level(PageTable *pageTable, unsigned int depth)
         nextLevel[i] = nullptr;
         map[i] = nullptr;
     }
+}
+
+PageTable::Level::~Level()
+{
+    delete (pageTable);
+    pageTable = nullptr;
+    delete nextLevel;
+    nextLevel = nullptr;
+    delete map;
+    map = nullptr;
 }
 
 PageTable::Map::Map(PageTable *pageTable, unsigned int num)
@@ -186,7 +196,10 @@ void PageTable::insert_vpn2pfn(PageTable *pagetable, unsigned int virtualAddress
     }
 
     levelNum = virtualAddressToVPN(virtualAddress, pagetable->bitMask[pagetable->levelCount - 1], pagetable->bitShift[pagetable->levelCount - 1]);
-    current->map[levelNum] = new PageTable::Map(pagetable, frame);
-    std::cout << "L: " << levelNum << std::endl;
-    std::cout << "F: " << frame << std::endl;
+    current->map[levelNum] = new PageTable::Map(pagetable, PageTable::calcPFN(virtualAddress, frame));
+}
+
+unsigned int PageTable::calcPFN(unsigned int vAddr, int frame)
+{
+    return frame;
 }

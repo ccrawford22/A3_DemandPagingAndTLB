@@ -272,8 +272,7 @@ int main(int argc, char **argv)
         // open trace file
         FILE *tracef_h;
         tracef_h = fopen(traceFile, "rb");
-
-        unsigned int addy;
+        int addressesProcessed = 0;
 
         if (!tracef_h)
         {
@@ -291,9 +290,20 @@ int main(int argc, char **argv)
             {
                 NextAddress(tracef_h, &mtrace); // tracef_h - file handle from fopen
                 vAddr = mtrace.addr;
-                pageTable->insert_vpn2pfn(pageTable, vAddr, frame);
-                printf("Addr: 0x%08x\n", vAddr);
-                frame++;
+                // look in cache
+                // look in pageTable
+                PageTable::Map *mapping = pageTable->lookup_vpn2pfn(pageTable, vAddr);
+                if (mapping == nullptr)
+                {
+                    pageTable->insert_vpn2pfn(pageTable, vAddr, frame);
+                    report_virtualAddr2physicalAddr(vAddr, mapping->num);
+                    frame++;
+                }
+                else
+                {
+                    report_virtualAddr2physicalAddr(vAddr, mapping->num);
+                }
+                addressesProcessed++;
             }
         }
 

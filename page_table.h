@@ -65,6 +65,7 @@ public:
    unsigned int virtualAddressToVPN(unsigned int virtualAddress, unsigned int mask, unsigned int shift);
    PageTable::Map *lookup_vpn2pfn(PageTable *pageTable, unsigned int virtualAddress);
    void insert_vpn2pfn(PageTable *pagetable, unsigned int virtualAddress, unsigned int frame);
+   unsigned int calcPFN(unsigned int vAddr, int frame);
 
    /**
     * @brief Pointer to the root of the page tree
