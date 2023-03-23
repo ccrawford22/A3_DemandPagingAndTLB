@@ -1,0 +1,22 @@
+[
+    {
+        "command": "g++ -g -std=c++11 -Wall -g -g3 -c main.cpp",
+        "directory": "/Users/calebgreenfield/Desktop/a3/A3-480",
+        "file": "/Users/calebgreenfield/Desktop/a3/A3-480/main.cpp"
+    },
+    {
+        "command": "g++ -std=c++11 -Wall -g -g3 -c vaddr_tracereader.c",
+        "directory": "/Users/calebgreenfield/Desktop/a3/A3-480",
+        "file": "/Users/calebgreenfield/Desktop/a3/A3-480/vaddr_tracereader.c"
+    },
+    {
+        "command": "g++ -std=c++11 -Wall -g -g3 -c page_table.cpp",
+        "directory": "/Users/calebgreenfield/Desktop/a3/A3-480",
+        "file": "/Users/calebgreenfield/Desktop/a3/A3-480/page_table.cpp"
+    },
+    {
+        "command": "g++ -std=c++11 -Wall -g -g3 -c map_tree.cpp",
+        "directory": "/Users/calebgreenfield/Desktop/a3/A3-480",
+        "file": "/Users/calebgreenfield/Desktop/a3/A3-480/map_tree.cpp"
+    }
+]
