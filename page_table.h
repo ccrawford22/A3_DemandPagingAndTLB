@@ -51,9 +51,9 @@ public:
    public:
       PageTable *pageTable;
 
-      unsigned int num;
+      unsigned int mapping;
 
-      Map(PageTable *pageTable, unsigned int depth);
+      Map(PageTable *pageTable, unsigned int mapping);
       ~Map();
    };
 
@@ -65,7 +65,7 @@ public:
    unsigned int virtualAddressToVPN(unsigned int virtualAddress, unsigned int mask, unsigned int shift);
    PageTable::Map *lookup_vpn2pfn(PageTable *pageTable, unsigned int virtualAddress);
    void insert_vpn2pfn(PageTable *pagetable, unsigned int virtualAddress, unsigned int frame);
-   unsigned int calcPFN(unsigned int vAddr, int frame);
+   unsigned int calcPFN(PageTable *pagetable, unsigned int vAddr, unsigned int frame);
 
    /**
     * @brief Pointer to the root of the page tree
@@ -91,6 +91,9 @@ public:
     * @brief levelSizes[i]: size of level i in bits
     */
    int *levelSizes;
+
+   int offsetSize;
+   unsigned int offsetMask;
 
    /**
     * @brief Recursively removes the node and all of its children

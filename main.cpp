@@ -292,16 +292,16 @@ int main(int argc, char **argv)
                 vAddr = mtrace.addr;
                 // look in cache
                 // look in pageTable
-                PageTable::Map *mapping = pageTable->lookup_vpn2pfn(pageTable, vAddr);
-                if (mapping == nullptr)
+                PageTable::Map *map = pageTable->lookup_vpn2pfn(pageTable, vAddr);
+                if (map == nullptr)
                 {
                     pageTable->insert_vpn2pfn(pageTable, vAddr, frame);
-                    report_virtualAddr2physicalAddr(vAddr, mapping->num);
+                    report_virtualAddr2physicalAddr(vAddr, pageTable->calcPFN(pageTable, vAddr, frame));
                     frame++;
                 }
                 else
                 {
-                    report_virtualAddr2physicalAddr(vAddr, mapping->num);
+                    report_virtualAddr2physicalAddr(vAddr, map->mapping);
                 }
                 addressesProcessed++;
             }
