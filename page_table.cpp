@@ -35,14 +35,14 @@ PageTable::PageTable(unsigned int shifts[], std::vector<int> sizes, int levelCou
 
 PageTable::~PageTable()
 {
-    delete (root);
-    root = nullptr;
-    delete bitMask;
-    bitMask = nullptr;
-    delete bitShift;
-    bitShift = nullptr;
-    delete entryCount;
-    entryCount = nullptr;
+    // delete (root);
+    // root = nullptr;
+    // delete bitMask;
+    // bitMask = nullptr;
+    // delete bitShift;
+    // bitShift = nullptr;
+    // delete entryCount;
+    // entryCount = nullptr;
 }
 
 unsigned int PageTable::createMask(int numOfMaskBits, int shift)

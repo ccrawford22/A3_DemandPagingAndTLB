@@ -20,8 +20,8 @@ $(PROGRAM) : $(OBJS)
 main.o : main.cpp
 	$(CC) -g $(CCFLAGS) main.cpp
 	
-vaddr_tracereader.o : vaddr_tracereader.c vaddr_tracereader.h
-	$(CC) $(CCFLAGS) vaddr_tracereader.c
+vaddr_tracereader.o : vaddr_tracereader.cpp vaddr_tracereader.h
+	$(CC) $(CCFLAGS) vaddr_tracereader.cpp
 	
 page_table.o : page_table.cpp page_table.h
 	$(CC) $(CCFLAGS) page_table.cpp
