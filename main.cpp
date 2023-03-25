@@ -17,6 +17,7 @@ Caleb Greenfield:
 #include <iomanip>
 #include "page_table.h"
 #include "print_helpers.h"
+#include <cmath>
 
 #define DEFAULT_NUMOF_MEM_REFERENCES 1000 // FIXME: Should read all addresses from file
 #define DEFAULT_NUMOF_TLB_ENTRIES 0
@@ -216,31 +217,6 @@ int main(int argc, char **argv)
             exit(1);
         }
 
-        if (p == LEVEL_BIT_MASKS)
-        {
-            // report_levelbitmasks(numLevels, levelbitmasks);
-        }
-        else if (p == VA2PA)
-        {
-            // report_virtualAddr2physicalAddr(virtual_address, physical_address);
-        }
-        else if (p == VA2PA_TLB_PTWALK)
-        {
-            // report_va2pa_TLB_PTwalk
-        }
-        else if (p == VPN2PFN)
-        {
-            // report_pagetable_map
-        }
-        else if (p == OFFSET)
-        {
-            // hexnum
-        }
-        else
-        {
-            // report_summary
-        }
-
         // get level sizes, calculate sum
         // get level sizes, calculate sum
         std::vector<int> levelSizes;
@@ -269,10 +245,14 @@ int main(int argc, char **argv)
         // create new pageTable
         PageTable *pageTable = new PageTable(shiftAry, levelSizes, numLevels, ADDRESS_SIZE);
 
+        if (p == LEVEL_BIT_MASKS)
+        {
+            report_levelbitmasks(numLevels, pageTable->bitMask);
+        }
+
         // open trace file
         FILE *tracef_h;
         tracef_h = fopen(traceFile, "rb");
-        int addressesProcessed = 0;
 
         if (!tracef_h)
         {
@@ -286,24 +266,55 @@ int main(int argc, char **argv)
             p2AddrTr mtrace;
             unsigned int vAddr;
             unsigned int frame = 0;
+            int pageHit = 0;
+            int pageMiss = 0;
+            int cacheHit = 0;
+            bool cHit;
+            bool pHit;
+            PageTable::Map *map;
             for (int i = 0; i < 10; i++)
             {
                 NextAddress(tracef_h, &mtrace); // tracef_h - file handle from fopen
                 vAddr = mtrace.addr;
+                cHit = false;
+                pHit = false;
                 // look in cache
+
                 // look in pageTable
-                PageTable::Map *map = pageTable->lookup_vpn2pfn(pageTable, vAddr);
+                map = pageTable->lookup_vpn2pfn(pageTable, vAddr);
                 if (map == nullptr)
                 {
-                    pageTable->insert_vpn2pfn(pageTable, vAddr, frame);
-                    report_virtualAddr2physicalAddr(vAddr, pageTable->calcPFN(pageTable, vAddr, frame));
+                    map = pageTable->insert_vpn2pfn(pageTable, vAddr, frame);
                     frame++;
+                    pageMiss++;
                 }
                 else
                 {
+                    pageHit++;
+                    pHit = true;
+                }
+
+                if (p == VA2PA)
+                {
                     report_virtualAddr2physicalAddr(vAddr, map->mapping);
                 }
-                addressesProcessed++;
+                else if (p == VA2PA_TLB_PTWALK)
+                {
+                    report_va2pa_TLB_PTwalk(vAddr, map->mapping, cHit, pHit);
+                }
+                else if (p == VPN2PFN)
+                {
+                    report_pagetable_map(pageTable->levelCount, map->pages, map->frame);
+                }
+                else if (p == OFFSET)
+                {
+                    hexnum(map->mapping);
+                }
+            }
+
+            if (p == SUMMARY)
+            {
+                report_summary(pow(2, pageTable->offsetSize), cacheHit, pageHit, cacheHit + pageHit + pageMiss, frame, 10);
             }
         }
 

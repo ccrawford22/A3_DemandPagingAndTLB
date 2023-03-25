@@ -92,10 +92,12 @@ PageTable::Level::~Level()
     map = nullptr;
 }
 
-PageTable::Map::Map(PageTable *pageTable, unsigned int mapping)
+PageTable::Map::Map(PageTable *pageTable, unsigned int mapping, unsigned int frame, unsigned int *pages)
 {
     this->pageTable = pageTable;
     this->mapping = mapping;
+    this->frame = frame;
+    this->pages = pages;
 }
 
 /**
@@ -179,14 +181,17 @@ PageTable::Map *PageTable::lookup_vpn2pfn(PageTable *pageTable, unsigned int vir
     * @param virtualAddress
     * @param frame
     */
-void PageTable::insert_vpn2pfn(PageTable *pagetable, unsigned int virtualAddress, unsigned int frame)
+PageTable::Map *PageTable::insert_vpn2pfn(PageTable *pagetable, unsigned int virtualAddress, unsigned int frame)
 {
     PageTable::Level *current = pagetable->root;
     unsigned int levelNum;
     int depth = 0;
+    unsigned int *pages;
+
     for (int i = 0; i < pagetable->levelCount - 1; i++)
     {
         levelNum = virtualAddressToVPN(virtualAddress, pagetable->bitMask[i], pagetable->bitShift[i]);
+        pages[i] = levelNum;
         if (current->nextLevel[levelNum] == nullptr)
         {
             current->nextLevel[levelNum] = new PageTable::Level(pagetable, depth);
@@ -196,7 +201,8 @@ void PageTable::insert_vpn2pfn(PageTable *pagetable, unsigned int virtualAddress
     }
 
     levelNum = virtualAddressToVPN(virtualAddress, pagetable->bitMask[pagetable->levelCount - 1], pagetable->bitShift[pagetable->levelCount - 1]);
-    current->map[levelNum] = new PageTable::Map(pagetable, PageTable::calcPFN(pagetable, virtualAddress, frame));
+    current->map[levelNum] = new PageTable::Map(pagetable, PageTable::calcPFN(pagetable, virtualAddress, frame), frame, pages);
+    return current->map[levelNum];
 }
 
 unsigned int PageTable::calcPFN(PageTable *pagetable, unsigned int vAddr, unsigned int frame)

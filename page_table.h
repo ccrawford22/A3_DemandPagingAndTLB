@@ -53,7 +53,11 @@ public:
 
       unsigned int mapping;
 
-      Map(PageTable *pageTable, unsigned int mapping);
+      unsigned int frame;
+
+      unsigned int *pages;
+
+      Map(PageTable *pageTable, unsigned int mapping, unsigned int frame, unsigned int *pages);
       ~Map();
    };
 
@@ -64,7 +68,7 @@ public:
    unsigned int createMask(int numOfmaskBits, int shift);
    unsigned int virtualAddressToVPN(unsigned int virtualAddress, unsigned int mask, unsigned int shift);
    PageTable::Map *lookup_vpn2pfn(PageTable *pageTable, unsigned int virtualAddress);
-   void insert_vpn2pfn(PageTable *pagetable, unsigned int virtualAddress, unsigned int frame);
+   PageTable::Map *insert_vpn2pfn(PageTable *pagetable, unsigned int virtualAddress, unsigned int frame);
    unsigned int calcPFN(PageTable *pagetable, unsigned int vAddr, unsigned int frame);
 
    /**
