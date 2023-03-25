@@ -146,6 +146,9 @@ unsigned int PageTable::virtualAddressToVPN(unsigned int virtualAddress, unsigne
 PageTable::Map *PageTable::lookup_vpn2pfn(PageTable *pageTable, unsigned int virtualAddress)
 {
     PageTable::Level *current = pageTable->root;
+    if(virtualAddress == 323688384){
+		std::cout << "Segmentation fault on line 156 at this virtual address: 323688384" << std::endl;
+	}
     unsigned int levelNum;
     for (int i = 0; i < pageTable->levelCount - 1; i++)
     {

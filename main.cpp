@@ -272,9 +272,8 @@ int main(int argc, char **argv)
             bool cHit;
             bool pHit;
             PageTable::Map *map;
-            for (int i = 0; i < 10; i++)
+            while (NextAddress(tracef_h, &mtrace))
             {
-                NextAddress(tracef_h, &mtrace); // tracef_h - file handle from fopen
                 vAddr = mtrace.addr;
                 cHit = false;
                 pHit = false;
