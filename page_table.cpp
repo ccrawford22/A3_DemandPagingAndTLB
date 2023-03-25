@@ -71,11 +71,11 @@ PageTable::Level::Level(PageTable *pageTable, unsigned int depth)
 {
     this->pageTable = pageTable;
     this->depth = depth;
-    this->entryCount = pageTable->entryCount[depth];
-    this->nextLevel = new PageTable::Level *[entryCount];
-    this->map = new PageTable::Map *[entryCount];
+    this->entries = pageTable->entryCount[depth];
+    this->nextLevel = new PageTable::Level *[this->entries];
+    this->map = new PageTable::Map *[this->entries];
 
-    for (size_t i = 0; i < entryCount; i++)
+    for (int i = 0; i < this->entries; i++)
     {
         nextLevel[i] = nullptr;
         map[i] = nullptr;
@@ -145,10 +145,10 @@ unsigned int PageTable::virtualAddressToVPN(unsigned int virtualAddress, unsigne
     */
 PageTable::Map *PageTable::lookup_vpn2pfn(PageTable *pageTable, unsigned int virtualAddress)
 {
-    PageTable::Level *current = pageTable->root;
-    if(virtualAddress == 323688384){
-		std::cout << "Segmentation fault on line 156 at this virtual address: 323688384" << std::endl;
+	if (virtualAddress == 580761312){
+		std::cout << ".." << std::endl;
 	}
+    PageTable::Level *current = pageTable->root;
     unsigned int levelNum;
     for (int i = 0; i < pageTable->levelCount - 1; i++)
     {

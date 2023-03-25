@@ -36,7 +36,7 @@ public:
       /**
        * @brief Maximum number of entries in this level
        */
-      unsigned int entryCount;
+      unsigned int entries;
 
       Level **nextLevel;
       Map **map;

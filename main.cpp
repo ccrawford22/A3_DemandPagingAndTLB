@@ -271,10 +271,16 @@ int main(int argc, char **argv)
             int cacheHit = 0;
             bool cHit;
             bool pHit;
+			int c = 0;
             PageTable::Map *map;
-            while (NextAddress(tracef_h, &mtrace))
+            for (int i = 0; i < 224000; i++)
             {
+				NextAddress(tracef_h, &mtrace);
+				c++;
                 vAddr = mtrace.addr;
+                if (vAddr == 323688384){
+					std::cout << "yes" << std::endl;
+				}
                 cHit = false;
                 pHit = false;
                 // look in cache
