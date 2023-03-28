@@ -32,16 +32,16 @@ public:
       /**
        * @brief current depth
        */
-      unsigned int depth;
+      int depth;
       /**
        * @brief Maximum number of entries in this level
        */
       unsigned int entries;
 
-      Level **nextLevel;
-      Map **map;
+      std::vector<Level*> nextLevel;
+      std::vector<Map*> map;
 
-      Level(PageTable *pageTable, unsigned int depth);
+      Level(PageTable *pageTable, int depth);
       ~Level();
    };
 
@@ -56,6 +56,8 @@ public:
       unsigned int frame;
 
       unsigned int *pages;
+      
+      unsigned int offset;
 
       Map(PageTable *pageTable, unsigned int mapping, unsigned int frame, unsigned int *pages);
       ~Map();
@@ -68,7 +70,7 @@ public:
    unsigned int createMask(int numOfmaskBits, int shift);
    unsigned int virtualAddressToVPN(unsigned int virtualAddress, unsigned int mask, unsigned int shift);
    PageTable::Map *lookup_vpn2pfn(PageTable *pageTable, unsigned int virtualAddress);
-   PageTable::Map *insert_vpn2pfn(PageTable *pagetable, unsigned int virtualAddress, unsigned int frame);
+   PageTable::Map *insert_vpn2pfn(PageTable *pageTable, unsigned int virtualAddress, unsigned int frame);
    unsigned int calcPFN(PageTable *pagetable, unsigned int vAddr, unsigned int frame);
 
    /**
@@ -98,6 +100,9 @@ public:
 
    int offsetSize;
    unsigned int offsetMask;
+   
+   Level* nullLevel;
+   Map* nullMap;
 
    /**
     * @brief Recursively removes the node and all of its children

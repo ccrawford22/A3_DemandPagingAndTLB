@@ -273,48 +273,50 @@ int main(int argc, char **argv)
             bool pHit;
 			int c = 0;
             PageTable::Map *map;
-            for (int i = 0; i < 224000; i++)
+            while (!feof(tracef_h))
             {
-				NextAddress(tracef_h, &mtrace);
-				c++;
-                vAddr = mtrace.addr;
-                if (vAddr == 323688384){
-					std::cout << "yes" << std::endl;
+				
+				if (NextAddress(tracef_h, &mtrace)){
+					c++;
+					vAddr = mtrace.addr;
+					if (vAddr == 323688384){
+						std::cout << "yes" << std::endl;
+					}
+					cHit = false;
+					pHit = false;
+					// look in cache
+
+					// look in pageTable
+					map = pageTable->lookup_vpn2pfn(pageTable, vAddr);
+					if (map == nullptr)
+					{
+						map = pageTable->insert_vpn2pfn(pageTable, vAddr, frame);
+						frame++;
+						pageMiss++;
+					}
+					else
+					{
+						pageHit++;
+						pHit = true;
+					}
+
+					if (p == VA2PA)
+					{
+						report_virtualAddr2physicalAddr(vAddr, map->mapping);
+					}
+					else if (p == VA2PA_TLB_PTWALK)
+					{
+						report_va2pa_TLB_PTwalk(vAddr, map->mapping, cHit, pHit);
+					}
+					else if (p == VPN2PFN)
+					{
+						report_pagetable_map(pageTable->levelCount, map->pages, map->frame);
+					}
+					else if (p == OFFSET)
+					{
+						hexnum(map->offset);
+					}
 				}
-                cHit = false;
-                pHit = false;
-                // look in cache
-
-                // look in pageTable
-                map = pageTable->lookup_vpn2pfn(pageTable, vAddr);
-                if (map == nullptr)
-                {
-                    map = pageTable->insert_vpn2pfn(pageTable, vAddr, frame);
-                    frame++;
-                    pageMiss++;
-                }
-                else
-                {
-                    pageHit++;
-                    pHit = true;
-                }
-
-                if (p == VA2PA)
-                {
-                    report_virtualAddr2physicalAddr(vAddr, map->mapping);
-                }
-                else if (p == VA2PA_TLB_PTWALK)
-                {
-                    report_va2pa_TLB_PTwalk(vAddr, map->mapping, cHit, pHit);
-                }
-                else if (p == VPN2PFN)
-                {
-                    report_pagetable_map(pageTable->levelCount, map->pages, map->frame);
-                }
-                else if (p == OFFSET)
-                {
-                    hexnum(map->mapping);
-                }
             }
 
             if (p == SUMMARY)
