@@ -143,7 +143,7 @@ void report_summary(unsigned int page_size,
   printf("Total hit percentage: %.2f%%, miss percentage: %.2f%%\n",
          hit_percent, 100 - hit_percent);
   printf("Frames allocated: %d\n", frames_used);
-  printf("Bytes used:  %ld\n", bytes);
+  printf("Bytes used:  %d\n", bytes);
 
   fflush(stdout);
 }

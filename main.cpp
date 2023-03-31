@@ -19,10 +19,11 @@ Caleb Greenfield:
 #include "print_helpers.h"
 #include <cmath>
 
-#define DEFAULT_NUMOF_MEM_REFERENCES 1000 // FIXME: Should read all addresses from file
+#define DEFAULT_NUMOF_MEM_REFERENCES -1
 #define DEFAULT_NUMOF_TLB_ENTRIES 0
 #define DEFAULT_PRINTMODE "summary"
 #define ADDRESS_SIZE 32
+#define MAX_VPN_SIZE 28
 
 // Constants and Macros
 string USAGE = " trace_file n_bits_for_level_0 ["
@@ -204,19 +205,6 @@ int main(int argc, char **argv)
         // get file name
         const char *traceFile = argv[idx];
 
-        // opt arg error handling
-        if (n < 0)
-        {
-            std::cout << "Number of memory accesses must be a number, greater than or equal to 0" << std::endl;
-            exit(1);
-        }
-
-        if (c < 0)
-        {
-            std::cout << "Cache capacity must be a number, greater than or equal to 0" << std::endl;
-            exit(1);
-        }
-
         // get level sizes, calculate sum
         // get level sizes, calculate sum
         std::vector<int> levelSizes;
@@ -224,14 +212,19 @@ int main(int argc, char **argv)
         int VPNSize = 0;
         while (idx < argc)
         {
+            if (atoi(argv[idx]) < 1)
+            {
+                std::cout << "Page tables must be at least 1 bit each." << std::endl;
+                exit(BADFLAG);
+            }
             levelSizes.push_back(atoi(argv[idx]));
             VPNSize = VPNSize + atoi(argv[idx]);
             idx++;
         }
-        if (VPNSize > ADDRESS_SIZE)
+        if (VPNSize >= MAX_VPN_SIZE)
         {
-            std::cout << "Sum of levels is greater than address size" << std::endl;
-            exit(1);
+            std::cout << "Too many bits used in page tables." << std::endl;
+            exit(BADFLAG);
         }
 
         int sum = 0;
@@ -258,7 +251,7 @@ int main(int argc, char **argv)
         {
             // error opening file
             std::cout << "Unable to open <<" << traceFile << ">>" << std::endl;
-            exit(1);
+            exit(BADFLAG);
         }
         else
         {
@@ -271,57 +264,55 @@ int main(int argc, char **argv)
             int cacheHit = 0;
             bool cHit;
             bool pHit;
-			int c = 0;
+            int numProcessed = 0;
             PageTable::Map *map;
-            while (!feof(tracef_h))
+            while (!feof(tracef_h) && (n == -1 || numProcessed < n))
             {
-				
-				if (NextAddress(tracef_h, &mtrace)){
-					c++;
-					vAddr = mtrace.addr;
-					if (vAddr == 323688384){
-						std::cout << "yes" << std::endl;
-					}
-					cHit = false;
-					pHit = false;
-					// look in cache
 
-					// look in pageTable
-					map = pageTable->lookup_vpn2pfn(pageTable, vAddr);
-					if (map == nullptr)
-					{
-						map = pageTable->insert_vpn2pfn(pageTable, vAddr, frame);
-						frame++;
-						pageMiss++;
-					}
-					else
-					{
-						pageHit++;
-						pHit = true;
-					}
+                if (NextAddress(tracef_h, &mtrace))
+                {
+                    numProcessed++;
+                    vAddr = mtrace.addr;
+                    cHit = false;
+                    pHit = false;
+                    // look in cache
 
-					if (p == VA2PA)
-					{
-						report_virtualAddr2physicalAddr(vAddr, map->mapping);
-					}
-					else if (p == VA2PA_TLB_PTWALK)
-					{
-						report_va2pa_TLB_PTwalk(vAddr, map->mapping, cHit, pHit);
-					}
-					else if (p == VPN2PFN)
-					{
-						report_pagetable_map(pageTable->levelCount, map->pages, map->frame);
-					}
-					else if (p == OFFSET)
-					{
-						hexnum(map->offset);
-					}
-				}
+                    // look in pageTable
+                    map = pageTable->lookup_vpn2pfn(pageTable, vAddr);
+                    if (map == nullptr)
+                    {
+                        map = pageTable->insert_vpn2pfn(pageTable, vAddr, frame);
+                        frame++;
+                        pageMiss++;
+                    }
+                    else
+                    {
+                        pageHit++;
+                        pHit = true;
+                    }
+
+                    if (p == VA2PA)
+                    {
+                        report_virtualAddr2physicalAddr(vAddr, map->mapping);
+                    }
+                    else if (p == VA2PA_TLB_PTWALK)
+                    {
+                        report_va2pa_TLB_PTwalk(vAddr, map->mapping, cHit, pHit);
+                    }
+                    else if (p == VPN2PFN)
+                    {
+                        report_pagetable_map(pageTable->levelCount, map->pages, map->frame);
+                    }
+                    else if (p == OFFSET)
+                    {
+                        hexnum(map->offset);
+                    }
+                }
             }
 
             if (p == SUMMARY)
             {
-                report_summary(pow(2, pageTable->offsetSize), cacheHit, pageHit, cacheHit + pageHit + pageMiss, frame, 10);
+                report_summary(pow(2, pageTable->offsetSize), cacheHit, pageHit, cacheHit + pageHit + pageMiss, frame, pageTable->bytesUsed);
             }
         }
 

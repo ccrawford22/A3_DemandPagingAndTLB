@@ -38,8 +38,8 @@ public:
        */
       unsigned int entries;
 
-      std::vector<Level*> nextLevel;
-      std::vector<Map*> map;
+      std::vector<Level *> nextLevel;
+      std::vector<Map *> map;
 
       Level(PageTable *pageTable, int depth);
       ~Level();
@@ -56,7 +56,7 @@ public:
       unsigned int frame;
 
       unsigned int *pages;
-      
+
       unsigned int offset;
 
       Map(PageTable *pageTable, unsigned int mapping, unsigned int frame, unsigned int *pages);
@@ -100,9 +100,11 @@ public:
 
    int offsetSize;
    unsigned int offsetMask;
-   
-   Level* nullLevel;
-   Map* nullMap;
+
+   unsigned int bytesUsed;
+
+   Level *nullLevel;
+   Map *nullMap;
 
    /**
     * @brief Recursively removes the node and all of its children

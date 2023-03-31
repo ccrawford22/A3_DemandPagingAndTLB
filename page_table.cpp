@@ -21,11 +21,11 @@ PageTable::PageTable(unsigned int shifts[], std::vector<int> sizes, int levelCou
     this->offsetSize = this->bitShift[levelCount - 1];
     unsigned int fullVPNMask = PageTable::createMask(addressSize - this->bitShift[levelCount - 1], this->bitShift[levelCount - 1]);
     this->offsetMask = ~fullVPNMask;
-    
+
     unsigned int *n = new unsigned int[1];
-    
-    this-> nullLevel = new PageTable::Level(this, -2);
-    this-> nullMap = new PageTable::Map(this, 0, 0, n);
+
+    this->nullLevel = new PageTable::Level(this, -2);
+    this->nullMap = new PageTable::Map(this, 0, 0, n);
 
     for (int i = 0; i < levelCount; i++)
     {
@@ -39,6 +39,8 @@ PageTable::PageTable(unsigned int shifts[], std::vector<int> sizes, int levelCou
 
     // initialize root last as levels will try to access entryCount in the page table
     this->root = new Level(this, 0);
+
+    this->bytesUsed = ((this->root->nextLevel.capacity() * sizeof(PageTable::Level)) + (this->root->map.capacity() * sizeof(PageTable::Map)));
 }
 
 PageTable::~PageTable()
@@ -70,13 +72,14 @@ PageTable::Level::Level(PageTable *pageTable, int depth)
     this->pageTable = pageTable;
     this->depth = depth;
     this->entries = pageTable->entryCount[depth];
-    this->nextLevel = std::vector<PageTable::Level*>(this->entries);
-    this->map = std::vector<PageTable::Map*>(this->entries);
-    
-    for(int i = 0; i < this->entries; i++){
-		nextLevel[i] = pageTable->nullLevel;
-		map[i] = pageTable->nullMap;
-	}
+    this->nextLevel = std::vector<PageTable::Level *>(this->entries);
+    this->map = std::vector<PageTable::Map *>(this->entries);
+
+    for (int i = 0; i < this->entries; i++)
+    {
+        nextLevel[i] = pageTable->nullLevel;
+        map[i] = pageTable->nullMap;
+    }
 }
 
 PageTable::Level::~Level()
@@ -95,10 +98,10 @@ PageTable::Map::Map(PageTable *pageTable, unsigned int mapping, unsigned int fra
     this->offset = this->mapping & pageTable->offsetMask;
 }
 
-PageTable::Map::~Map(){
-	delete pageTable;
+PageTable::Map::~Map()
+{
+    delete pageTable;
 }
-
 
 /**
  * @brief Given a virtual address, apply the given bit mask and shift right by the given number
@@ -145,45 +148,41 @@ unsigned int PageTable::virtualAddressToVPN(unsigned int virtualAddress, unsigne
     */
 PageTable::Map *PageTable::lookup_vpn2pfn(PageTable *pageTable, unsigned int virtualAddress)
 {
-	if(virtualAddress == 322019557){
-		std::cout<<"sure"<<std::endl;
-	}
-	if (pageTable->root != nullptr){
-		PageTable::Level *current = pageTable->root;
-		unsigned int levelNum;
-		for (int i = 0; i < pageTable->levelCount-1; i++)
-		{
-			if (current != nullptr || current != pageTable->nullLevel){
-				levelNum = virtualAddressToVPN(virtualAddress, pageTable->bitMask[i], pageTable->bitShift[i]);
-				if (current->nextLevel[levelNum] == pageTable->nullLevel)
-				{
-					return nullptr;
-				}
-				current = current->nextLevel[levelNum];
-			}else{
-				return nullptr;
-			}
-		}
+    if (pageTable->root != nullptr)
+    {
+        PageTable::Level *current = pageTable->root;
+        unsigned int levelNum;
+        for (int i = 0; i < pageTable->levelCount - 1; i++)
+        {
+            if (current != nullptr || current != pageTable->nullLevel)
+            {
+                levelNum = virtualAddressToVPN(virtualAddress, pageTable->bitMask[i], pageTable->bitShift[i]);
+                if (current->nextLevel[levelNum] == pageTable->nullLevel)
+                {
+                    return nullptr;
+                }
+                current = current->nextLevel[levelNum];
+            }
+            else
+            {
+                return nullptr;
+            }
+        }
 
-		levelNum = virtualAddressToVPN(virtualAddress, pageTable->bitMask[pageTable->levelCount - 1], pageTable->bitShift[pageTable->levelCount - 1]);
-		if (current->map[levelNum] != pageTable->nullMap && current->map[levelNum] != nullptr)
-		{
-			unsigned int newMapping = calcPFN(pageTable, virtualAddress, current->map[levelNum]->frame);
-			if (current->map[levelNum]->mapping != newMapping){
-				current->map[levelNum]->mapping = newMapping;
-				current->map[levelNum]->offset = newMapping & pageTable->offsetMask;
-			}
-			return current->map[levelNum];
-		}
-	}
-	
-		
-	
-	return nullptr;
-	
-	
-		
-  
+        levelNum = virtualAddressToVPN(virtualAddress, pageTable->bitMask[pageTable->levelCount - 1], pageTable->bitShift[pageTable->levelCount - 1]);
+        if (current->map[levelNum] != pageTable->nullMap && current->map[levelNum] != nullptr)
+        {
+            unsigned int newMapping = calcPFN(pageTable, virtualAddress, current->map[levelNum]->frame);
+            if (current->map[levelNum]->mapping != newMapping)
+            {
+                current->map[levelNum]->mapping = newMapping;
+                current->map[levelNum]->offset = newMapping & pageTable->offsetMask;
+            }
+            return current->map[levelNum];
+        }
+    }
+
+    return nullptr;
 }
 
 /**
@@ -201,24 +200,25 @@ PageTable::Map *PageTable::lookup_vpn2pfn(PageTable *pageTable, unsigned int vir
     */
 PageTable::Map *PageTable::insert_vpn2pfn(PageTable *pageTable, unsigned int virtualAddress, unsigned int frame)
 {
-	
+
     PageTable::Level *current = pageTable->root;
     unsigned int levelNum;
-    unsigned int *pages = new unsigned int[levelCount-1];
+    unsigned int *pages = new unsigned int[levelCount - 1];
 
-    for (int i = 0; i < pageTable->levelCount-1; i++)
+    for (int i = 0; i < pageTable->levelCount - 1; i++)
     {
         levelNum = virtualAddressToVPN(virtualAddress, pageTable->bitMask[i], pageTable->bitShift[i]);
         pages[i] = levelNum;
         if (current->nextLevel[levelNum] == pageTable->nullLevel || current->nextLevel[levelNum] == nullptr)
         {
-            current->nextLevel[levelNum] = new PageTable::Level(pageTable, i+1);
+            current->nextLevel[levelNum] = new PageTable::Level(pageTable, i + 1);
+            pageTable->bytesUsed = pageTable->bytesUsed + (current->nextLevel[levelNum]->nextLevel.capacity() * sizeof(PageTable::Level)) + (current->nextLevel[levelNum]->map.capacity() * sizeof(PageTable::Map));
         }
         current = current->nextLevel[levelNum];
     }
 
     levelNum = virtualAddressToVPN(virtualAddress, pageTable->bitMask[pageTable->levelCount - 1], pageTable->bitShift[pageTable->levelCount - 1]);
-    pages[pageTable->levelCount-1] = levelNum;
+    pages[pageTable->levelCount - 1] = levelNum;
     unsigned int mapping = calcPFN(pageTable, virtualAddress, frame);
     current->map[levelNum] = new PageTable::Map(pageTable, mapping, frame, pages);
     return current->map[levelNum];
