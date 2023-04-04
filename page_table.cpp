@@ -89,6 +89,15 @@ PageTable::Level::~Level()
     map.clear();
 }
 
+PageTable::Map::Map()
+{
+    this->pageTable = nullptr;
+    this->mapping = -1;
+    this->frame = -1;
+    this->pages = 0;
+    this->offset = -1;
+}
+
 PageTable::Map::Map(PageTable *pageTable, unsigned int mapping, unsigned int frame, unsigned int *pages)
 {
     this->pageTable = pageTable;

@@ -18,6 +18,7 @@ Caleb Greenfield:
 #include "page_table.h"
 #include "print_helpers.h"
 #include <cmath>
+#include "translation_lookaside_buffer.h"
 
 #define DEFAULT_NUMOF_MEM_REFERENCES -1
 #define DEFAULT_NUMOF_TLB_ENTRIES 0
@@ -237,6 +238,7 @@ int main(int argc, char **argv)
         }
         // create new pageTable
         PageTable *pageTable = new PageTable(shiftAry, levelSizes, numLevels, ADDRESS_SIZE);
+        TLBuffer *cache = new TLBuffer(10);
 
         if (p == LEVEL_BIT_MASKS)
         {
@@ -276,19 +278,29 @@ int main(int argc, char **argv)
                     cHit = false;
                     pHit = false;
                     // look in cache
-
-                    // look in pageTable
-                    map = pageTable->lookup_vpn2pfn(pageTable, vAddr);
-                    if (map == nullptr)
+                    map = cache->lookup(vAddr);
+                    if (map != nullptr && map != pageTable->nullMap)
                     {
-                        map = pageTable->insert_vpn2pfn(pageTable, vAddr, frame);
-                        frame++;
-                        pageMiss++;
+                        cHit = true;
                     }
                     else
                     {
-                        pageHit++;
-                        pHit = true;
+                        cHit = false;
+                        // look in pageTable
+                        map = pageTable->lookup_vpn2pfn(pageTable, vAddr);
+                        if (map == nullptr || map == pageTable->nullMap)
+                        {
+                            map = pageTable->insert_vpn2pfn(pageTable, vAddr, frame);
+                            frame++;
+                            pageMiss++;
+                            cache->insert(vAddr, map);
+                        }
+                        else
+                        {
+                            pageHit++;
+                            pHit = true;
+                            cache->insert(vAddr, map);
+                        }
                     }
 
                     if (p == VA2PA)

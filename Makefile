@@ -6,7 +6,7 @@ CC=g++
 CCFLAGS=-std=c++11 -Wall -g -g3 -c
 
 # object files
-OBJS = main.o vaddr_tracereader.o page_table.o print_helpers.o
+OBJS = main.o vaddr_tracereader.o page_table.o print_helpers.o translation_lookaside_buffer.o
 
 # Program name
 PROGRAM = mmuwithtlb
@@ -28,6 +28,9 @@ page_table.o : page_table.cpp page_table.h
 
 print_helpers.o: print_helpers.cpp print_helpers.h
 	$(CC) $(CCFLAGS) print_helpers.cpp
+
+translation_lookaside_buffer.o: translation_lookaside_buffer.cpp translation_lookaside_buffer.h
+	$(CC) $(CCFLAGS) translation_lookaside_buffer.cpp
 	
 debug: $(PROGRAM)
 	gdb $(PROGRAM)

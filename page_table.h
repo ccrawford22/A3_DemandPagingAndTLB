@@ -59,6 +59,7 @@ public:
 
       unsigned int offset;
 
+      Map();
       Map(PageTable *pageTable, unsigned int mapping, unsigned int frame, unsigned int *pages);
       ~Map();
    };
