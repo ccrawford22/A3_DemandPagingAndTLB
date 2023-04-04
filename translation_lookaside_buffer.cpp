@@ -17,6 +17,34 @@ TLBuffer::TLBuffer(int size) : size(size)
 {
 }
 
+void TLBuffer::updateRecentlyAccessedPages(unsigned int vpn)
+{
+    auto entry = std::find(recentlyAccessedPages.begin(), recentlyAccessedPages.end(), vpn);
+    if (entry != recentlyAccessedPages.end())
+    {
+        // Update access time of existing page
+        recentlyAccessedPages.erase(entry);
+    }
+    else if (recentlyAccessedPages.size() >= 8)
+    {
+        // Remove oldest page if list is full
+        auto oldestEntry = std::min_element(recentlyAccessedPages.begin(), recentlyAccessedPages.end(),
+                                            [this](const unsigned int &a, const unsigned int &b)
+                                            {
+                                                return entries[a].lastAccessTime < entries[b].lastAccessTime;
+                                            });
+        recentlyAccessedPages.erase(oldestEntry);
+    }
+    // Add new page to list
+    recentlyAccessedPages.push_back(vpn);
+    // Update access time of all pages
+    unsigned int accessTime = entries[vpn].lastAccessTime;
+    for (auto &page : recentlyAccessedPages)
+    {
+        entries[page].lastAccessTime = accessTime;
+    }
+}
+
 PageTable::Map *TLBuffer::lookup(unsigned int vpn)
 {
     PageTable::Map *mapping = new PageTable::Map();
@@ -24,7 +52,7 @@ PageTable::Map *TLBuffer::lookup(unsigned int vpn)
     if (entryIt != entries.end())
     { // TLBuffer hit
         mapping = entryIt->second.mapping;
-        entryIt->second.lastAccessTime = recentlyAccessedPages.size();
+        updateRecentlyAccessedPages(vpn);
         return mapping;
     }
     return nullptr; // TLBuffer miss

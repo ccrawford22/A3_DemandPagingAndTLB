@@ -26,6 +26,7 @@ public:
     TLBuffer(int size);
     PageTable::Map *lookup(unsigned int vpn);
     void insert(unsigned int vpn, PageTable::Map *mapping);
+    void updateRecentlyAccessedPages(unsigned int vpn);
 
 private:
     int size;

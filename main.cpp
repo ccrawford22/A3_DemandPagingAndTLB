@@ -136,6 +136,7 @@ int main(int argc, char **argv)
                 Cache capacity must be a number, greater than or equal to 0
                 then exit.
             */
+
             if (atoi(optarg) < 0)
             {
                 cout << endl
@@ -238,7 +239,7 @@ int main(int argc, char **argv)
         }
         // create new pageTable
         PageTable *pageTable = new PageTable(shiftAry, levelSizes, numLevels, ADDRESS_SIZE);
-        TLBuffer *cache = new TLBuffer(10);
+        TLBuffer *cache = new TLBuffer(c);
 
         if (p == LEVEL_BIT_MASKS)
         {
@@ -282,6 +283,7 @@ int main(int argc, char **argv)
                     if (map != nullptr && map != pageTable->nullMap)
                     {
                         cHit = true;
+                        cacheHit++;
                     }
                     else
                     {
@@ -293,13 +295,19 @@ int main(int argc, char **argv)
                             map = pageTable->insert_vpn2pfn(pageTable, vAddr, frame);
                             frame++;
                             pageMiss++;
-                            cache->insert(vAddr, map);
+                            if (c > 0)
+                            {
+                                cache->insert(vAddr, map);
+                            }
                         }
                         else
                         {
                             pageHit++;
                             pHit = true;
-                            cache->insert(vAddr, map);
+                            if (c > 0)
+                            {
+                                cache->insert(vAddr, map);
+                            }
                         }
                     }
 
