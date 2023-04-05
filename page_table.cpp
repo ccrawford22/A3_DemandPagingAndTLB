@@ -13,25 +13,36 @@ Caleb Greenfield:
 
 PageTable::PageTable(unsigned int shifts[], std::vector<int> sizes, int levelCount, int addressSize)
 {
+    // total levels
     this->levelCount = levelCount;
+    // shifts for each level
     this->bitShift = &shifts[0];
+    // size for each level
     this->levelSizes = &sizes[0];
+    // masks for each level
     this->bitMask = new unsigned int[levelCount];
+    // entry count for each level
     this->entryCount = new unsigned int[levelCount];
+    // offset size for each level
     this->offsetSize = this->bitShift[levelCount - 1];
+    // mask for full VPN - excludes offset
     unsigned int fullVPNMask = PageTable::createMask(addressSize - this->bitShift[levelCount - 1], this->bitShift[levelCount - 1]);
+    // mask for offset - excludes VPN
     this->offsetMask = ~fullVPNMask;
 
     unsigned int *n = new unsigned int[1];
 
+    // objects to represent null levels and maps
     this->nullLevel = new PageTable::Level(this, -2);
     this->nullMap = new PageTable::Map(this, 0, 0, n);
 
+    // creates masks for each level
     for (int i = 0; i < levelCount; i++)
     {
         bitMask[i] = PageTable::createMask(this->levelSizes[i], this->bitShift[i]);
     }
 
+    // cacluate entry count for each level
     for (int i = 0; i < levelCount; i++)
     {
         entryCount[i] = pow(2, levelSizes[i]);
@@ -40,9 +51,11 @@ PageTable::PageTable(unsigned int shifts[], std::vector<int> sizes, int levelCou
     // initialize root last as levels will try to access entryCount in the page table
     this->root = new Level(this, 0);
 
+    // calc total bytes used
     this->bytesUsed = ((this->root->nextLevel.capacity() * sizeof(PageTable::Level)) + (this->root->map.capacity() * sizeof(PageTable::Map)));
 }
 
+// destructor
 PageTable::~PageTable()
 {
     delete (root);
@@ -53,6 +66,7 @@ PageTable::~PageTable()
     delete nullMap;
 }
 
+// calculates mask given size and shifts
 unsigned int PageTable::createMask(int numOfMaskBits, int shift)
 {
     unsigned int mask = 1;
@@ -69,12 +83,18 @@ unsigned int PageTable::createMask(int numOfMaskBits, int shift)
 
 PageTable::Level::Level(PageTable *pageTable, int depth)
 {
+    // pageTable object
     this->pageTable = pageTable;
+    // current depth
     this->depth = depth;
+    // max entries
     this->entries = pageTable->entryCount[depth];
+    // array of child elements
     this->nextLevel = std::vector<PageTable::Level *>(this->entries);
+    // array of mappings, only used by leaf level
     this->map = std::vector<PageTable::Map *>(this->entries);
 
+    // initalize
     for (int i = 0; i < this->entries; i++)
     {
         nextLevel[i] = pageTable->nullLevel;
@@ -82,6 +102,7 @@ PageTable::Level::Level(PageTable *pageTable, int depth)
     }
 }
 
+// destructor
 PageTable::Level::~Level()
 {
     delete (pageTable);
@@ -98,6 +119,7 @@ PageTable::Map::Map()
     this->offset = -1;
 }
 
+// map object
 PageTable::Map::Map(PageTable *pageTable, unsigned int mapping, unsigned int frame, unsigned int *pages)
 {
     this->pageTable = pageTable;
@@ -155,6 +177,7 @@ unsigned int PageTable::virtualAddressToVPN(unsigned int virtualAddress, unsigne
     * @param virtualAddress
     * @return Map*
     */
+
 PageTable::Map *PageTable::lookup_vpn2pfn(PageTable *pageTable, unsigned int virtualAddress)
 {
     if (pageTable->root != nullptr)

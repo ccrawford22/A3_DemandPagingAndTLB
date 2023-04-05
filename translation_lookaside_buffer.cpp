@@ -1,88 +1,47 @@
-/*
-CS 480 - 1001: Spring 2023
-A3: Virtual Memory with TLB Cache
-Cody Crawford: 824167663
-Caleb Greenfield:
-*/
-
-#include <algorithm>
 #include "translation_lookaside_buffer.h"
-#include "page_table.h"
 
-TLBuffer::TLBuffer() : size(0)
+template <typename Key, typename Value>
+TLBCache<Key, Value>::TLBCache(size_t size)
 {
+    this->cacheSize = size;
 }
 
-TLBuffer::TLBuffer(int size) : size(size)
-{
-}
+template <typename Key, typename Value>
+TLBCache<Key, Value>::~TLBCache() {}
 
-void TLBuffer::updateRecentlyAccessedPages(unsigned int vpn)
+template <typename Key, typename Value>
+Value TLBCache<Key, Value>::get(const Key &key)
 {
-    auto entry = std::find(recentlyAccessedPages.begin(), recentlyAccessedPages.end(), vpn);
-    if (entry != recentlyAccessedPages.end())
+    auto it = cacheMap.find(key);
+    if (it != cacheMap.end())
     {
-        // Update access time of existing page
-        recentlyAccessedPages.erase(entry);
+        lruList.splice(lruList.begin(), lruList, it->second);
+        return it->second->second;
     }
-    else if (recentlyAccessedPages.size() >= 8)
+    else
     {
-        // Remove oldest page if list is full
-        auto oldestEntry = std::min_element(recentlyAccessedPages.begin(), recentlyAccessedPages.end(),
-                                            [this](const unsigned int &a, const unsigned int &b)
-                                            {
-                                                return entries[a].lastAccessTime < entries[b].lastAccessTime;
-                                            });
-        recentlyAccessedPages.erase(oldestEntry);
-    }
-    // Add new page to list
-    recentlyAccessedPages.push_back(vpn);
-    // Update access time of all pages
-    unsigned int accessTime = entries[vpn].lastAccessTime;
-    for (auto &page : recentlyAccessedPages)
-    {
-        entries[page].lastAccessTime = accessTime;
+        return Value();
     }
 }
 
-PageTable::Map *TLBuffer::lookup(unsigned int vpn)
+template <typename Key, typename Value>
+void TLBCache<Key, Value>::insert(const Key &key, const Value &value)
 {
-    PageTable::Map *mapping = new PageTable::Map();
-    auto entryIt = entries.find(vpn);
-    if (entryIt != entries.end())
-    { // TLBuffer hit
-        mapping = entryIt->second.mapping;
-        updateRecentlyAccessedPages(vpn);
-        return mapping;
+    auto it = cacheMap.find(key);
+    if (it != cacheMap.end())
+    {
+        it->second->second = value;
+        lruList.splice(lruList.begin(), lruList, it->second);
     }
-    return nullptr; // TLBuffer miss
-}
-
-void TLBuffer::insert(unsigned int vpn, PageTable::Map *mapping)
-{
-    if (entries.size() == size)
-    { // TLBuffer is full
-        // Find the entry with the oldest access time
-        unsigned int oldestVpn = recentlyAccessedPages.front();
-        for (auto vpn : recentlyAccessedPages)
+    else
+    {
+        if (cacheMap.size() >= cacheSize)
         {
-            if (entries[vpn].lastAccessTime < entries[oldestVpn].lastAccessTime)
-            {
-                oldestVpn = vpn;
-            }
+            auto last = lruList.back();
+            cacheMap.erase(last.first);
+            lruList.pop_back();
         }
-        // Remove the entry with the oldest access time
-        entries.erase(oldestVpn);
-        recentlyAccessedPages.pop_front();
+        lruList.emplace_front(key, value);
+        cacheMap[key] = lruList.begin();
     }
-    // Add the new entry
-    TLBEntry entry = {vpn, mapping, recentlyAccessedPages.size()};
-    entries[vpn] = entry;
-    // Update the recently accessed pages
-    auto pageIt = std::find(recentlyAccessedPages.begin(), recentlyAccessedPages.end(), vpn);
-    if (pageIt != recentlyAccessedPages.end())
-    {
-        recentlyAccessedPages.erase(pageIt);
-    }
-    recentlyAccessedPages.push_back(vpn);
 }

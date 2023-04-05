@@ -1,37 +1,25 @@
-/*
-CS 480 - 1001: Spring 2023
-A3: Virtual Memory with TLBuffer Cache
-Cody Crawford: 824167663
-Caleb Greenfield:
-*/
-
 #ifndef TRANSLATION_LOOKASIDE_BUFFER_H
 #define TRANSLATION_LOOKASIDE_BUFFER_H
 
+#include <iostream>
 #include <unordered_map>
-#include <deque>
-#include "page_table.h"
+#include <list>
 
-struct TLBEntry
-{
-    unsigned int vpn;            // Virtual Page Number
-    PageTable::Map *mapping;     // Physical Frame Number
-    unsigned int lastAccessTime; // Last access time of this entry
-};
-
-class TLBuffer
+template <typename Key, typename Value>
+class TLBCache
 {
 public:
-    TLBuffer();
-    TLBuffer(int size);
-    PageTable::Map *lookup(unsigned int vpn);
-    void insert(unsigned int vpn, PageTable::Map *mapping);
-    void updateRecentlyAccessedPages(unsigned int vpn);
+    TLBCache(size_t size);
+    ~TLBCache();
+
+    Value get(const Key &key);
+
+    void insert(const Key &key, const Value &value);
 
 private:
-    int size;
-    std::unordered_map<unsigned int, TLBEntry> entries;
-    std::deque<unsigned int> recentlyAccessedPages; // Stores the VPNs of the recently accessed pages
+    size_t cacheSize;
+    std::unordered_map<Key, typename std::list<std::pair<Key, Value>>::iterator> cacheMap;
+    std::list<std::pair<Key, Value>> lruList;
 };
 
-#endif
+#endif // TRANSLATION_LOOKASIDE_BUFFER_H

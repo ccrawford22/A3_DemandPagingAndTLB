@@ -239,7 +239,7 @@ int main(int argc, char **argv)
         }
         // create new pageTable
         PageTable *pageTable = new PageTable(shiftAry, levelSizes, numLevels, ADDRESS_SIZE);
-        TLBuffer *cache = new TLBuffer(c);
+        TLBCache<unsigned int, PageTable::Map *> *cache = new TLBCache<unsigned int, PageTable::Map *>(c);
 
         if (p == LEVEL_BIT_MASKS)
         {
@@ -278,8 +278,10 @@ int main(int argc, char **argv)
                     vAddr = mtrace.addr;
                     cHit = false;
                     pHit = false;
-                    // look in cache
-                    map = cache->lookup(vAddr);
+
+                    // Cache is not functional. Does not correctly implement LRU procedure.
+                    //  look in cache
+                    map = cache->get(vAddr);
                     if (map != nullptr && map != pageTable->nullMap)
                     {
                         cHit = true;
@@ -336,6 +338,8 @@ int main(int argc, char **argv)
             }
         }
 
+        delete (pageTable);
+        delete (cache);
         fclose(tracef_h);
         return (0);
     }
