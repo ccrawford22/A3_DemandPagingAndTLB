@@ -268,7 +268,7 @@ int main(int argc, char **argv)
             bool cHit;
             bool pHit;
             int numProcessed = 0;
-            PageTable::Map *map;
+            PageTable::Map *map = pageTable->nullMap;
             while (!feof(tracef_h) && (n == -1 || numProcessed < n))
             {
 
@@ -281,11 +281,13 @@ int main(int argc, char **argv)
 
                     // Cache is not functional. Does not correctly implement LRU procedure.
                     //  look in cache
-                    // map = cache->get(vAddr);
+                    map = cache->get(vAddr & pageTable->fullVPNMask);
                     if (map != nullptr && map != pageTable->nullMap)
                     {
                         cHit = true;
                         cacheHit++;
+                        pageTable->checkPFN(pageTable, map, vAddr);
+                        
                     }
                     else
                     {
@@ -299,7 +301,7 @@ int main(int argc, char **argv)
                             pageMiss++;
                             if (c > 0)
                             {
-                                // cache->add(vAddr, map);
+                                cache->add(vAddr & pageTable->fullVPNMask, map);
                             }
                         }
                         else
@@ -308,7 +310,7 @@ int main(int argc, char **argv)
                             pHit = true;
                             if (c > 0)
                             {
-                                // cache->add(vAddr, map);
+                                cache->add(vAddr & pageTable->fullVPNMask, map);
                             }
                         }
                     }
@@ -338,7 +340,6 @@ int main(int argc, char **argv)
             }
         }
 
-        delete (pageTable);
         delete (cache);
         fclose(tracef_h);
         return (0);

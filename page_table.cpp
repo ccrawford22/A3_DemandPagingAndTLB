@@ -26,7 +26,7 @@ PageTable::PageTable(unsigned int shifts[], std::vector<int> sizes, int levelCou
     // offset size for each level
     this->offsetSize = this->bitShift[levelCount - 1];
     // mask for full VPN - excludes offset
-    unsigned int fullVPNMask = PageTable::createMask(addressSize - this->bitShift[levelCount - 1], this->bitShift[levelCount - 1]);
+    this-> fullVPNMask = PageTable::createMask(addressSize - this->bitShift[levelCount - 1], this->bitShift[levelCount - 1]);
     // mask for offset - excludes VPN
     this->offsetMask = ~fullVPNMask;
 
@@ -260,4 +260,13 @@ unsigned int PageTable::calcPFN(PageTable *pagetable, unsigned int vAddr, unsign
 {
     unsigned int combined = (frame << pagetable->offsetSize) | (vAddr & pagetable->offsetMask);
     return combined;
+}
+
+void PageTable::checkPFN(PageTable *pageTable, PageTable::Map *map, unsigned int vAddr)
+{
+    //if offsets are not equal
+    if((vAddr & pageTable->offsetMask) != (map->mapping & pageTable->offsetMask)){
+        //replace offset
+        map->mapping = (map->mapping & pageTable->fullVPNMask) | (vAddr & pageTable->offsetMask);
+    }
 }

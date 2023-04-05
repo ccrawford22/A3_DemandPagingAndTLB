@@ -73,6 +73,7 @@ public:
    PageTable::Map *lookup_vpn2pfn(PageTable *pageTable, unsigned int virtualAddress);
    PageTable::Map *insert_vpn2pfn(PageTable *pageTable, unsigned int virtualAddress, unsigned int frame);
    unsigned int calcPFN(PageTable *pagetable, unsigned int vAddr, unsigned int frame);
+   void checkPFN(PageTable *pageTable, PageTable::Map *map, unsigned int vAddr);
 
    /**
     * @brief Pointer to the root of the page tree
@@ -101,6 +102,7 @@ public:
 
    int offsetSize;
    unsigned int offsetMask;
+   unsigned int fullVPNMask;
 
    unsigned int bytesUsed;
 
