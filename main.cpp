@@ -239,7 +239,7 @@ int main(int argc, char **argv)
         }
         // create new pageTable
         PageTable *pageTable = new PageTable(shiftAry, levelSizes, numLevels, ADDRESS_SIZE);
-        TLBCache<unsigned int, PageTable::Map *> *cache = new TLBCache<unsigned int, PageTable::Map *>(c);
+        TLBCache *cache = new TLBCache(c);
 
         if (p == LEVEL_BIT_MASKS)
         {
@@ -281,7 +281,7 @@ int main(int argc, char **argv)
 
                     // Cache is not functional. Does not correctly implement LRU procedure.
                     //  look in cache
-                    map = cache->get(vAddr);
+                    // map = cache->get(vAddr);
                     if (map != nullptr && map != pageTable->nullMap)
                     {
                         cHit = true;
@@ -299,7 +299,7 @@ int main(int argc, char **argv)
                             pageMiss++;
                             if (c > 0)
                             {
-                                cache->insert(vAddr, map);
+                                // cache->add(vAddr, map);
                             }
                         }
                         else
@@ -308,7 +308,7 @@ int main(int argc, char **argv)
                             pHit = true;
                             if (c > 0)
                             {
-                                cache->insert(vAddr, map);
+                                // cache->add(vAddr, map);
                             }
                         }
                     }

@@ -1,25 +1,25 @@
 #ifndef TRANSLATION_LOOKASIDE_BUFFER_H
 #define TRANSLATION_LOOKASIDE_BUFFER_H
 
-#include <iostream>
 #include <unordered_map>
 #include <list>
+#include "page_table.h"
 
-template <typename Key, typename Value>
 class TLBCache
 {
 public:
-    TLBCache(size_t size);
-    ~TLBCache();
+    TLBCache(size_t capacity);
 
-    Value get(const Key &key);
+    PageTable::Map *get(unsigned int key);
 
-    void insert(const Key &key, const Value &value);
+    void add(unsigned int key, PageTable::Map *value);
 
 private:
-    size_t cacheSize;
-    std::unordered_map<Key, typename std::list<std::pair<Key, Value>>::iterator> cacheMap;
-    std::list<std::pair<Key, Value>> lruList;
+    std::unordered_map<unsigned int, PageTable::Map *> cache; // Map for caching key-value pairs
+    std::list<unsigned int> lru_list;                         // List for tracking LRU order
+    size_t capacity;                                          // Maximum capacity of the cache
+
+    void moveToFront(std::unordered_map<unsigned int, PageTable::Map *>::iterator iter);
 };
 
-#endif // TRANSLATION_LOOKASIDE_BUFFER_H
+#endif /* TLB_CACHE_H */

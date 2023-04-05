@@ -1,47 +1,40 @@
 #include "translation_lookaside_buffer.h"
+#include "page_table.h"
 
-template <typename Key, typename Value>
-TLBCache<Key, Value>::TLBCache(size_t size)
+TLBCache::TLBCache(size_t capacity) : capacity(capacity) {}
+
+PageTable::Map *TLBCache::get(unsigned int key)
 {
-    this->cacheSize = size;
-}
-
-template <typename Key, typename Value>
-TLBCache<Key, Value>::~TLBCache() {}
-
-template <typename Key, typename Value>
-Value TLBCache<Key, Value>::get(const Key &key)
-{
-    auto it = cacheMap.find(key);
-    if (it != cacheMap.end())
+    auto iter = cache.find(key);
+    if (iter == cache.end())
     {
-        lruList.splice(lruList.begin(), lruList, it->second);
-        return it->second->second;
+        return nullptr;
     }
     else
     {
-        return Value();
+        // Cache hit, move accessed item to front of the list
+        moveToFront(iter);
+        return iter->second;
     }
 }
 
-template <typename Key, typename Value>
-void TLBCache<Key, Value>::insert(const Key &key, const Value &value)
+void TLBCache::add(unsigned int key, PageTable::Map *value)
 {
-    auto it = cacheMap.find(key);
-    if (it != cacheMap.end())
+    if (cache.size() >= capacity)
     {
-        it->second->second = value;
-        lruList.splice(lruList.begin(), lruList, it->second);
+        // If cache is full, evict least recently used item
+        auto last = lru_list.back();
+        cache.erase(last);
+        lru_list.pop_back();
     }
-    else
-    {
-        if (cacheMap.size() >= cacheSize)
-        {
-            auto last = lruList.back();
-            cacheMap.erase(last.first);
-            lruList.pop_back();
-        }
-        lruList.emplace_front(key, value);
-        cacheMap[key] = lruList.begin();
-    }
+    // Add new item to cache
+    cache[key] = value;
+    lru_list.push_front(key);
+}
+
+void TLBCache::moveToFront(std::unordered_map<unsigned int, PageTable::Map *>::iterator iter)
+{
+    // Move accessed item to front of the list to represent it as most recently used
+    lru_list.remove(iter->first);
+    lru_list.push_front(iter->first);
 }
